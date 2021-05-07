@@ -1,9 +1,9 @@
 package models
 
 type TermMark struct {
-	TermMarkID string `json:"termMarkID,omitempty"`
-	Value      int    `json:"value,omitempty"`
-	StudentID  string `json:"studentID,omitempty"`
-	Grade      Grade  `json:"grade,omitempty"`
-	Term       int    `json:"term,omitempty"`
+	TermMarkID string `json:"termMarkID,omitempty" bson:"termMarkID,omitempty"`
+	Value      int    `json:"value,omitempty" bson:"value,omitempty"`
+	StudentID  string `json:"studentID,omitempty" bson:"studentID,omitempty"`
+	Grade      Grade  `json:"grade,omitempty" bson:"grade,omitempty"`
+	Term       int    `json:"term,omitempty" bson:"term,omitempty"`
 }
