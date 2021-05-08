@@ -14,12 +14,17 @@ import (
 
 	// models (just for now)
 	"backend-go/models"
+
+	// routes
+	"backend-go/teacher"
 )
 
 func main() {
   app := fiber.New()
 
   db.InitDatabase()
+
+  teacher.Routes(app)
 
   app.Post("/", func (c * fiber.Ctx) error {
     var subject models.Subject
@@ -36,6 +41,10 @@ func main() {
     }   
 
     return c.JSON(insertResult)
+  })
+
+  app.Get("/", func (c *fiber.Ctx) error {
+    return c.SendString("api is running")
   })
 
   app.Listen(":1000")
