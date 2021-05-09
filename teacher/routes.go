@@ -36,4 +36,25 @@ func Routes(app *fiber.App) {
 
   // get all the students of a subject
   group.Get("/:subjectID", teacherMiddleware, getSubjectStudents)
+
+  // create mark or truancy
+  group.Post("/mark", teacherMiddleware, createMark)
+  group.Post("/truancy", teacherMiddleware, createTruancy)
+
+  // get marks or truancies
+  group.Get("/mark/:subjectID/:studentID", teacherMiddleware, getMarks)
+  group.Get("/truancy/:subjectID/:studentID", teacherMiddleware, getTruancys)
+
+  // motivate truancy
+  group.Put("/truancy/motivate", teacherMiddleware, motivateTruancy)
+
+  // create averageMark
+  group.Post("/average", teacherMiddleware, createAverageMark)
+
+  // get average marks
+  group.Get("/average/:subjectID/:studentID", teacherMiddleware, getAverageMarks)
+
+  // get average marks for multiple students
+  group.Get("/average/:subjectID", teacherMiddleware, getAverageMarksSubject)
+
 }

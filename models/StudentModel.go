@@ -16,11 +16,11 @@ type Student struct {
 	CNP         string           `json:"cnp,omitempty" bson:"cnp,omitempty"`
 	Password    string           `json:"password" bson:"password"`
 	Grade       Grade            `json:"grade" bson:"grade"`
-	SubjectList []StudentSubject `json:"subjectList" bson:"subjectList"`
+	SubjectList []ShortSubject `json:"subjectList" bson:"subjectList"`
 }
 
-// we actually define StudentSubject because it doesn't have the grade field.
-type StudentSubject struct {
+// we actually define ShortSubject because it doesn't have the grade field.
+type ShortSubject struct {
 	SubjectID string `json:"subjectID,omitempty" bson:",omitempty"`
 	Name      string `json:"name,omitempty" bson:",omitempty"`
 }
