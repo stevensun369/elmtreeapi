@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	// internal database package
 	"backend-go/db"
@@ -21,6 +22,10 @@ import (
 
 func main() {
   app := fiber.New()
+
+  app.Use(cors.New(cors.Config{
+    AllowOrigins: "*", 
+  }))
 
   db.InitDatabase()
 

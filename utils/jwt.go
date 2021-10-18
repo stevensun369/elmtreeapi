@@ -3,23 +3,29 @@ package utils
 import (
 	"time"
 
+	"backend-go/models"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
 var JWTKey = []byte("123456")
 
-type Claims struct {
-  ID string `json:"id"`
+type TeacherClaims struct {
+  TeacherID string `json:"teacherID"`
+  HomeroomGrade models.Grade `json:"homeroomGrade"`
+  SubjectList []models.Subject `json:"subjectList"`
   jwt.StandardClaims
 }
 
-func GenerateToken(id string) (tokenString string, err error) {
+func TeacherGenerateToken(id string, homeroomGrade models.Grade, subjectList []models.Subject) (tokenString string, err error) {
   // one year has 8760 hours
   expirationTime := time.Now().Add(8760 * time.Hour)
 
   // the "claims"
-  claims := &Claims{
-    ID: id,
+  claims := &TeacherClaims{
+    TeacherID: id,
+    HomeroomGrade: homeroomGrade,
+    SubjectList: subjectList,
     StandardClaims: jwt.StandardClaims{
       ExpiresAt: expirationTime.Unix(),
     },

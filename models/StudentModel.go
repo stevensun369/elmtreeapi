@@ -21,8 +21,8 @@ type Student struct {
 
 // we actually define ShortSubject because it doesn't have the grade field.
 type ShortSubject struct {
-	SubjectID string `json:"subjectID,omitempty" bson:",omitempty"`
-	Name      string `json:"name,omitempty" bson:",omitempty"`
+	SubjectID string `json:"subjectID,omitempty" bson:"subjectID,omitempty"`
+	Name      string `json:"name,omitempty" bson:"name,omitempty"`
 }
 
 func GetStudentById(studentID string) (Student, error) {
