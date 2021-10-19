@@ -11,7 +11,6 @@ func Routes(app *fiber.App) {
   group.Post("/login", postLogin)
 
   // get homeroom info
-  group.Get("/homeroom/info", teacherMiddleware, getHomeroomInfo)
 
   // get homeroom students
   group.Get("/homeroom", teacherMiddleware, getHomeroomStudents)
@@ -29,7 +28,7 @@ func Routes(app *fiber.App) {
   group.Get("/homeroom/:studentID", teacherMiddleware, getHomeroomStudentSubjects)
 
   // get teacher subjects
-  group.Get("/subjects", teacherMiddleware, getSubjects)
+  group.Get("/update", teacherMiddleware, update)
 
   // get all the students that a non-homeroom teacher can interact with
   group.Get("/students", teacherMiddleware, getStudents)

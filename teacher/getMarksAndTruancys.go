@@ -17,7 +17,7 @@ import (
 )
 
 // @desc    Get marks
-// @route   GET /api/teacher/mark
+// @route   GET /api/teacher/mark/:subjectID/:studentID
 // @access  Private
 func getMarks(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")
@@ -45,8 +45,8 @@ func getMarks(c *fiber.Ctx) error {
   return c.JSON(marks)
 }
 
-// @desc    Get marks
-// @route   GET /api/teacher/mark
+// @desc    Get truancys
+// @route   GET /api/teacher/truancy/:subjectID/:studentID
 // @access  Private
 func getTruancys(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")

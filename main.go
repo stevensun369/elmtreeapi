@@ -17,6 +17,7 @@ import (
 	"backend-go/models"
 
 	// routes
+	"backend-go/student"
 	"backend-go/teacher"
 )
 
@@ -30,6 +31,7 @@ func main() {
   db.InitDatabase()
 
   teacher.Routes(app)
+  student.Routes(app)
 
   app.Post("/", func (c * fiber.Ctx) error {
     var subject models.Subject

@@ -17,6 +17,13 @@ type TeacherClaims struct {
   jwt.StandardClaims
 }
 
+type StudentClaims struct {
+  StudentID string `json:"studentID"`
+  Grade models.Grade `json:"grade"`
+  SubjectList []models.ShortSubject `json:"subjectList"`
+  jwt.StandardClaims
+}
+
 func TeacherGenerateToken(id string, homeroomGrade models.Grade, subjectList []models.Subject) (tokenString string, err error) {
   // one year has 8760 hours
   expirationTime := time.Now().Add(8760 * time.Hour)
@@ -37,7 +44,23 @@ func TeacherGenerateToken(id string, homeroomGrade models.Grade, subjectList []m
   return tokenString, err
 }
 
-// func ValidateToken(token string) {
-//   jwt.Parse()
-// }
+func StudentGenerateToken(id string, grade models.Grade, subjectList []models.ShortSubject) (tokenString string, err error) {
+  // one year has 8760 hours 
+  expirationTime := time.Now().Add(8760 * time.Hour)
+
+  // the "claims"
+  claims := &StudentClaims{
+    StudentID: id,
+    Grade: grade,
+    SubjectList: subjectList,
+    StandardClaims: jwt.StandardClaims{
+      ExpiresAt: expirationTime.Unix(),
+    },
+  }
+  token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+  tokenString, err = token.SignedString(JWTKey)
+
+
+  return tokenString, err
+}
 

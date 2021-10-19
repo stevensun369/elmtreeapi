@@ -21,10 +21,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// @desc    Get teacher subjects
-// @route   GET /api/teacher/subjects
+// @desc    Updates teacher subject and homeroom grade
+// @route   GET /api/teacher/update
 // @access  Private
-func getSubjects(c *fiber.Ctx) error {
+func update(c *fiber.Ctx) error {
   teacherIDLocals := fmt.Sprintf("%v", c.Locals("teacherID"))
   var teacherID string
   json.Unmarshal([]byte(teacherIDLocals), &teacherID)
@@ -41,6 +41,7 @@ func getSubjects(c *fiber.Ctx) error {
 
   return c.JSON(bson.M{
     "subjectList": teacher.SubjectList,
+    "homeroomGrade": teacher.HomeroomGrade,
     "token": tokenString,
   })
 }

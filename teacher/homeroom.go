@@ -19,17 +19,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// @desc   Get homeroom info
-// @route  GET /api/teacher/homeroom/info
-// @access Private
-func getHomeroomInfo(c *fiber.Ctx) error {
-  homeroomGradeLocals := fmt.Sprintf("%v", c.Locals("homeroomGrade"))
-  var homeroomGrade models.Grade
-  json.Unmarshal([]byte(homeroomGradeLocals), &homeroomGrade)
-
-  return c.JSON(homeroomGrade)
-}
-
 // @desc   Get homeroom students
 // @route  GET /api/teacher/homeroom
 // @access Private
