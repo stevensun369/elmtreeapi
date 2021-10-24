@@ -91,7 +91,6 @@ func postLogin(c *fiber.Ctx) error {
   // if the teacher doesn't have a password
   if teacher.Password == "" {
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body["password"]), 10)
-
     if err != nil {
       return c.Status(500).SendString(fmt.Sprintf("%v", err))
     }

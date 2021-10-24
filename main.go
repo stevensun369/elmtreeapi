@@ -17,6 +17,7 @@ import (
 	"backend-go/models"
 
 	// routes
+	"backend-go/parent"
 	"backend-go/student"
 	"backend-go/teacher"
 )
@@ -32,6 +33,7 @@ func main() {
 
   teacher.Routes(app)
   student.Routes(app)
+  parent.Routes(app)
 
   app.Post("/", func (c * fiber.Ctx) error {
     var subject models.Subject
