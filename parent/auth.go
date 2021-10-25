@@ -76,20 +76,20 @@ func parentRegister(c *fiber.Ctx) error {
   // generating the parent id
   var parentID = utils.GenID()
   parentID = utils.GenID()
-  fmt.Println(parentID)
   var parentGenID models.Parent
   parentsCollection.FindOne(context.Background(), bson.M{"parentID": parentID}).Decode(&parentGenID)
   for (parentGenID.ParentID != "") {
     parentID = utils.GenID()
     parentsCollection.FindOne(context.Background(), bson.M{"parentID": parentID}).Decode(&parentGenID)
-    fmt.Println(parentID)
   } 
 
   // check if there is a parent account with cnp
   var checkParent models.Parent
   parentsCollection.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&checkParent)
   if (checkParent.ParentID != "") {
-    return c.Status(401).SendString("Există deja un părinte cu CNP-ul introdus.")
+    return c.Status(401).JSON(bson.M{
+      "message": "Există deja un părinte cu CNP-ul introdus.",
+    })  
   }
 
   // hashed password
@@ -146,7 +146,9 @@ func parentLogin(c *fiber.Ctx) error {
   // getting the parent
   var parent models.Parent
   if err = parentsCollection.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&parent); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
+    return c.Status(401).JSON(bson.M{
+      "message": "Nu există niciun părinte cu CNP-ul introdus.",
+    })  
   }
   hashedPassword := parent.Password
 
@@ -188,6 +190,8 @@ func parentLogin(c *fiber.Ctx) error {
       "token": tokenString,
     })
   } else {
-    return c.Status(401).SendString("Nu ati introdus parola corecta")
+    return c.Status(401).JSON(bson.M{
+      "message": "Nu ați introdus parola validă.",
+    }) 
   }
 } 

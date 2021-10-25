@@ -85,7 +85,9 @@ func postLogin(c *fiber.Ctx) error {
   // getting the teacher
   var teacher models.Teacher
   if err = collection.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&teacher); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
+    return c.Status(401).JSON(bson.M{
+      "message": "Nu există niciun profesor cu CNP-ul introdus.",
+    })
   }
 
   // if the teacher doesn't have a password
@@ -139,7 +141,9 @@ func postLogin(c *fiber.Ctx) error {
         "token": tokenString,
       })
     } else {
-      return c.Status(500).SendString(fmt.Sprintf("%v", compareErr))
+      return c.Status(401).JSON(bson.M{
+        "message": "Nu ați introdus parola validă.",
+      })
     }
   } 
 }

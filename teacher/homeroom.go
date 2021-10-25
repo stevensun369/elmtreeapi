@@ -201,13 +201,11 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
   // generating id
   var termMarkID = utils.GenID()
   termMarkID = utils.GenID()
-  fmt.Println(termMarkID)
   var termMarkGenID models.TermMark
   termMarksCollection.FindOne(context.Background(), bson.M{"termMarkID": termMarkID}).Decode(&termMarkGenID)
   for (termMarkGenID != models.TermMark{Grade: models.Grade{}}) {
     termMarkID = utils.GenID()
     termMarksCollection.FindOne(context.Background(), bson.M{"termMarkID": termMarkID}).Decode(&termMarkGenID)
-    fmt.Println(termMarkID)
   } 
 
   termMark := models.TermMark{

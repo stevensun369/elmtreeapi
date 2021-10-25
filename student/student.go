@@ -51,7 +51,6 @@ func getTruancys(c *fiber.Ctx) error {
   studentIDLocals := fmt.Sprintf("%v", c.Locals("studentID"))
   var studentID string
   json.Unmarshal([]byte(studentIDLocals), &studentID)
-  fmt.Println(studentID)
 
   subjectID := c.Params("subjectID")
 
@@ -84,7 +83,6 @@ func getAverageMarks(c *fiber.Ctx) error {
   studentIDLocals := fmt.Sprintf("%v", c.Locals("studentID"))
   var studentID string
   json.Unmarshal([]byte(studentIDLocals), &studentID)
-  fmt.Println(studentID)
 
   averageMarksCollection, err := db.GetCollection("averagemarks")
   if err != nil {
@@ -114,7 +112,6 @@ func getTermMarks(c *fiber.Ctx) error {
     studentIDLocals := fmt.Sprintf("%v", c.Locals("studentID"))
     var studentID string
     json.Unmarshal([]byte(studentIDLocals), &studentID)
-    fmt.Println(studentID)
 
     // getting the term marks
     termMarksCollection, err := db.GetCollection("termmarks")

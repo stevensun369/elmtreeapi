@@ -123,13 +123,11 @@ func createMark(c *fiber.Ctx) error {
   // generating id
   var markID = utils.GenID()
   markID = utils.GenID()
-  fmt.Println(markID)
   var markGenID models.Mark
   marksCollection.FindOne(context.Background(), bson.M{"markID": markID}).Decode(&markGenID)
   for (markGenID != models.Mark{Subject: models.ShortSubject{}, Grade: models.Grade{}}) {
     markID = utils.GenID()
     marksCollection.FindOne(context.Background(), bson.M{"markID": markID}).Decode(&markGenID)
-    fmt.Println(markID)
   } 
 
   // some prep variables for the mark struct
@@ -235,13 +233,11 @@ func createTruancy(c *fiber.Ctx) error {
   // generating id
   var truancyID = utils.GenID()
   truancyID = utils.GenID()
-  fmt.Println(truancyID)
   var truancyGenID models.Truancy
   truancysCollection.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
   for (truancyGenID != models.Truancy{Subject: models.ShortSubject{}, Grade: models.Grade{}}) {
     truancyID = utils.GenID()
     truancysCollection.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
-    fmt.Println(truancyID)
   } 
 
   // some prep variables for the truancy struct
@@ -346,13 +342,11 @@ func createAverageMark(c *fiber.Ctx) error {
   // generating id
   var averageMarkID = utils.GenID()
   averageMarkID = utils.GenID()
-  fmt.Println(averageMarkID)
   var averageMarkGenID models.AverageMark
   averageMarksCollection.FindOne(context.Background(), bson.M{"averageMarkID": averageMarkID}).Decode(&averageMarkGenID)
   for (averageMarkGenID != models.AverageMark{Subject: models.ShortSubject{}, Grade: models.Grade{}}) {
     averageMarkID = utils.GenID()
     averageMarksCollection.FindOne(context.Background(), bson.M{"averageMarkID": averageMarkID}).Decode(&averageMarkGenID)
-    fmt.Println(averageMarkGenID)
   } 
 
   // getting the markscollection
