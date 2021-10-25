@@ -1,3 +1,4 @@
 .env
 gin-bin.exe
 main.exe
+/env/env.go

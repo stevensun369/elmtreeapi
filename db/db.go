@@ -7,20 +7,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"os"
-
-	"github.com/joho/godotenv"
+	// env
+	"backend-go/env"
 )
 
 var Client *mongo.Client
 
 func InitDatabase() {
   var err error
-  _ = godotenv.Load(".env")
-  if err != nil {
-    log.Fatal(err)
-  }
-  Client, err = mongo.Connect(context.Background(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
+  Client, err = mongo.Connect(context.Background(), options.Client().ApplyURI(env.MongoURI))
 
   if err != nil {
     log.Fatal(err)

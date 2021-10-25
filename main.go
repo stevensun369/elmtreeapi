@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -56,5 +57,5 @@ func main() {
     return c.SendString("api is running")
   })
 
-  app.Listen(":1000")
+  log.Fatal(app.Listen(":1000"))
 }

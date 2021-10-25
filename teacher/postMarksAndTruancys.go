@@ -13,11 +13,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"os"
 	"strconv"
 
 	// godotenv
-	"github.com/joho/godotenv"
 
 	// mongodb
 	"go.mongodb.org/mongo-driver/bson"
@@ -39,27 +37,8 @@ func createMark(c *fiber.Ctx) error {
   dateDay := date[:2]
   dateMonth := date[3:5]
 
-  // getting term change
-  err := godotenv.Load(".env")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  termDateDay := os.Getenv("TERM_CHANGE_DAY")
-  termDateMonth := os.Getenv("TERM_CHANGE_MONTH")
-
   // deciding the term of the mark
-  var isTermOne bool 
-  if dateMonth < termDateMonth {
-    isTermOne = true
-  } else if (dateMonth > termDateMonth) {
-    isTermOne = false
-  } else { // dateMonth === termDateMonth
-    if (dateDay <= termDateDay) {
-      isTermOne = true
-    } else { // dateDay > termDateDay
-      isTermOne = false
-    }
-  }
+  isTermOne := utils.IsTermOne(dateDay, dateMonth)
 
   // getting and checking if there are averageMarks
   averageMarkTermOne := false
@@ -134,7 +113,7 @@ func createMark(c *fiber.Ctx) error {
   valueInt, _ := strconv.Atoi(value) 
   var term int
   if isTermOne {
-  term = 1
+    term = 1
   } else {
     term = 2
   }
@@ -190,27 +169,8 @@ func createTruancy(c *fiber.Ctx) error {
   dateDay := date[:2]
   dateMonth := date[3:5]
 
-  // getting term change
-  err := godotenv.Load(".env")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  termDateDay := os.Getenv("TERM_CHANGE_DAY")
-  termDateMonth := os.Getenv("TERM_CHANGE_MONTH")
-
   // deciding the term of the truancy
-  var isTermOne bool 
-  if dateMonth < termDateMonth {
-    isTermOne = true
-  } else if (dateMonth > termDateMonth) {
-    isTermOne = false
-  } else { // dateMonth === termDateMonth
-    if (dateDay <= termDateDay) {
-      isTermOne = true
-    } else { // dateDay > termDateDay
-      isTermOne = false
-    }
-  }
+  isTermOne := utils.IsTermOne(dateDay, dateMonth)
 
   subjectListLocals := fmt.Sprintf("%v", c.Locals("subjectList"))
   var subjectList []models.Subject
@@ -243,10 +203,11 @@ func createTruancy(c *fiber.Ctx) error {
   // some prep variables for the truancy struct
   var term int
   if isTermOne {
-  term = 1
+    term = 1
   } else {
     term = 2
   }
+  
   // filling in all the values to a truancy struct
   truancy := models.Truancy{
     TruancyID: truancyID,
