@@ -77,6 +77,10 @@ func getStudents(c *fiber.Ctx) error {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
 
+  if len(students) == 0 {
+    students = []models.Student {}
+  }
+
   return c.JSON(students)
 }
 
@@ -103,6 +107,10 @@ func getSubjectStudents(c *fiber.Ctx) error {
 
   if err = cursor.All(context.Background(), &students); err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
+  }
+
+  if len(students) == 0 {
+    students = []models.Student {}
   }
 
   return c.JSON(students)

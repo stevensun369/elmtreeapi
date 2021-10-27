@@ -46,6 +46,10 @@ func getHomeroomStudents(c *fiber.Ctx) error {
   if err = cursor.All(context.Background(), &students); err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
+  
+  if len(students) == 0 {
+    students = []models.Student {}
+  }
 
   return c.JSON(students)
 }
@@ -98,6 +102,10 @@ func getHomeroomAverageMarks(c *fiber.Ctx) error {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
 
+  if len(averageMarks) == 0 {
+    averageMarks = []models.AverageMark {}
+  }
+
   return c.JSON(averageMarks)
 }
 
@@ -130,6 +138,10 @@ func getHomeroomTermMarks(c *fiber.Ctx) error {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
 
+  if len(termMarks) == 0 {
+    termMarks = []models.TermMark {}
+  }
+
   return c.JSON(termMarks)
 }
   
@@ -158,7 +170,9 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
   }).Decode(&termMarkTest)
 
   if (termMarkTest != models.TermMark{Grade: models.Grade{}}) {
-    return c.Status(500).SendString("Exista deja o medie pe semestrul " + term)
+    return c.Status(500).JSON(bson.M{
+      "message": "Exista deja o medie pe semestrul " + term,
+    })
   }
 
   // get student and his subjectList
@@ -187,7 +201,9 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
   }
 
   if len(averageMarks) != len(student.SubjectList) {
-    return c.Status(500).SendString("Nu toate mediile au fost incheiate pe semestrul" + term)
+    return c.Status(500).JSON(bson.M{
+      "message": "Nu toate mediile au fost incheiate pe semestrul" + term,
+    })
   }
 
   var value float64 = 0

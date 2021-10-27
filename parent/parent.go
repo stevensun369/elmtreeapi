@@ -35,7 +35,9 @@ func parentAddStudent(c *fiber.Ctx) error {
   var student models.Student
   studentsCollection.FindOne(context.Background(), bson.M{"cnp": body["studentCNP"], "studentID": body["studentID"]}).Decode(&student)
   if (student.StudentID == "") {
-    return c.Status(404).SendString("Nu există niciun elev cu datele introduse.")
+    return c.Status(404).JSON(bson.M{
+      "message": "Nu există niciun elev cu datele introduse.",
+    })
   }
 
   newStudentIDListJSON := []byte(fmt.Sprintf("%v", c.Locals("studentIDList")))
@@ -65,6 +67,10 @@ func parentAddStudent(c *fiber.Ctx) error {
   tokenString, err := utils.ParentGenerateToken(parent.ParentID, parent.StudentIDList)
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
+  }
+
+  if len(students) == 0 {
+    students = []models.Student {}
   }
 
   return c.JSON(

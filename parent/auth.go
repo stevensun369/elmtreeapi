@@ -170,6 +170,9 @@ func parentLogin(c *fiber.Ctx) error {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
 
+  if len(students) == 0 {
+    students = []models.Student {}
+  }
 
   compareErr := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(body["password"]))
 

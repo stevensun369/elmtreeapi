@@ -91,6 +91,10 @@ func getMarks(c *fiber.Ctx) error {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
 
+  if len(marks) == 0 {
+    marks = []models.Mark {}
+  }
+
   return c.JSON(marks)
 }
 
@@ -118,6 +122,10 @@ func getTruancys(c *fiber.Ctx) error {
   }
   if err = cursor.All(context.Background(), &truancys); err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
+  }
+
+  if len(truancys) == 0 {
+    truancys = []models.Truancy {}
   }
 
   return c.JSON(truancys)
@@ -148,6 +156,10 @@ func getAverageMarks(c *fiber.Ctx) error {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
 
+  if len(averageMarks) == 0 {
+    averageMarks = []models.AverageMark {}
+  }
+
   return c.JSON(averageMarks)
 }
 
@@ -176,5 +188,9 @@ func getTermMarks(c *fiber.Ctx) error {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
 
+  if len(termMarks) == 0 {
+    termMarks = []models.TermMark {}
+  }
+  
   return c.JSON(termMarks)
 }

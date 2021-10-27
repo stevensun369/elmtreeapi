@@ -72,12 +72,18 @@ func createMark(c *fiber.Ctx) error {
     }
   }
   if averageMarkTermOne && averageMarkTermTwo {
-    return c.Status(500).SendString("Media pe ambele semestre a fost încheiată.")
+    return c.Status(500).JSON(bson.M{
+      "message": "Media pe ambele semestre a fost încheiată.",
+    })
   } else {
     if averageMarkTermOne && isTermOne {
-      return c.Status(500).SendString("Media pe primul semestru a fost încheiată.")
+      return c.Status(500).JSON(bson.M{
+        "message": "Media pe primul semestru a fost încheiată.",
+      })
     } else if averageMarkTermTwo && !isTermOne {
-      return c.Status(500).SendString("Media pe al doilea semestru a fost încheiată.")
+      return c.Status(500).JSON(bson.M{
+        "message": "Media pe al doilea semestru a fost încheiată.",
+      })
     }
   }
 
@@ -280,7 +286,6 @@ func createAverageMark(c *fiber.Ctx) error {
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
-
 
   subjectListLocals := fmt.Sprintf("%v", c.Locals("subjectList"))
   var subjectList []models.Subject
