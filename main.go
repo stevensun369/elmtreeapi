@@ -2,14 +2,13 @@ package main
 
 import (
 	// fiber
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	// internal database package
 	"backend-go/db"
@@ -21,6 +20,7 @@ import (
 	"backend-go/parent"
 	"backend-go/student"
 	"backend-go/teacher"
+	"backend-go/timetable"
 )
 
 func main() {
@@ -35,6 +35,7 @@ func main() {
   teacher.Routes(app)
   student.Routes(app)
   parent.Routes(app)
+  timetable.Routes(app)
 
   app.Post("/", func (c * fiber.Ctx) error {
     var subject models.Subject
