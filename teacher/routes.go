@@ -42,7 +42,7 @@ func Routes(app *fiber.App) {
 
   // get marks or truancies
   group.Get("/mark/:subjectID/:studentID", teacherMiddleware, getMarks)
-  group.Get("/truancy/:subjectID/:studentID", teacherMiddleware, getTruancys)
+  group.Get("/truancy/:subjectID/:studentID", teacherMiddleware, gettruancies)
 
   // motivate truancy
   group.Put("/truancy/motivate", teacherMiddleware, motivateTruancy)

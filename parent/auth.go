@@ -19,7 +19,6 @@ import (
 
 	// mongodb
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // parent middleware
@@ -37,25 +36,18 @@ func parentMiddleware(c *fiber.Ctx) error {
       return utils.JWTKey, nil
     })
 
-    if err != nil {
-      return c.Status(500).SendString(fmt.Sprintf("%v", err))
-    }
+    utils.CheckError(c, err)
 
     if !tkn.Valid {
-      return c.Status(500).SendString("token not valid")
+      utils.MessageError(c, "token not valid")
     }
 
-    parentIDBytes, _ := json.Marshal(claims.ParentID)
-    parentIDJSON := string(parentIDBytes)
-    c.Locals("parentID", parentIDJSON)
-
-    studentIDListBytes, _ := json.Marshal(claims.StudentIDList)
-    studentIDListJSON := string(studentIDListBytes)
-    c.Locals("studentIDList", studentIDListJSON)
+    utils.SetLocals(c, "parentID", claims.ParentID)
+    utils.SetLocals(c, "studentIDList", claims.StudentIDList)
   }
 
   if (token == "") {
-    return c.Status(500).SendString("no token")
+    utils.MessageError(c, "no token provided")
   }
 
   return c.Next()
@@ -68,24 +60,19 @@ func parentRegister(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
 
-  parentsCollection, err := db.GetCollection("parents")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  
   // generating the parent id
   var parentID = utils.GenID()
   parentID = utils.GenID()
   var parentGenID models.Parent
-  parentsCollection.FindOne(context.Background(), bson.M{"parentID": parentID}).Decode(&parentGenID)
+  db.Parents.FindOne(context.Background(), bson.M{"parentID": parentID}).Decode(&parentGenID)
   for (parentGenID.ParentID != "") {
     parentID = utils.GenID()
-    parentsCollection.FindOne(context.Background(), bson.M{"parentID": parentID}).Decode(&parentGenID)
+    db.Parents.FindOne(context.Background(), bson.M{"parentID": parentID}).Decode(&parentGenID)
   } 
 
   // check if there is a parent account with cnp
   var checkParent models.Parent
-  parentsCollection.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&checkParent)
+  db.Parents.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&checkParent)
   if (checkParent.ParentID != "") {
     return c.Status(401).JSON(bson.M{
       "message": "Există deja un părinte cu CNP-ul introdus.",
@@ -107,7 +94,7 @@ func parentRegister(c *fiber.Ctx) error {
     StudentIDList: []string {},
   }
 
-  insertedResult, err := parentsCollection.InsertOne(context.Background(), parent)
+  insertedResult, err := db.Parents.InsertOne(context.Background(), parent)
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
@@ -137,38 +124,20 @@ func parentLogin(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
 
-  // getting the db collection
-  parentsCollection, err := db.GetCollection("parents")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
   // getting the parent
   var parent models.Parent
-  if err = parentsCollection.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&parent); err != nil {
+  if err := db.Parents.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&parent); err != nil {
     return c.Status(401).JSON(bson.M{
       "message": "Nu există niciun părinte cu CNP-ul introdus.",
     })  
   }
   hashedPassword := parent.Password
 
-  // get the students
-  studentsCollection, err := db.GetCollection("students")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  var students []models.Student
-  options := options.Find()
-  options.SetSort(bson.D{{Key: "grade.gradeNumber", Value: 1}, {Key: "grade.gradeLetter", Value: 1}})
-  cursor, err := studentsCollection.Find(context.Background(), bson.M{
+  // get students
+  students, err := db.GetStudents(bson.M{
     "studentID": bson.M{"$in": parent.StudentIDList},
-  }, options)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  if err = cursor.All(context.Background(), &students); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.GradeSort)
+  utils.CheckError(c, err)
 
   if len(students) == 0 {
     students = []models.Student {}
@@ -193,8 +162,6 @@ func parentLogin(c *fiber.Ctx) error {
       "token": tokenString,
     })
   } else {
-    return c.Status(401).JSON(bson.M{
-      "message": "Nu ați introdus parola validă.",
-    }) 
+    return utils.MessageError(c, "Nu ați introdus parola validă.") 
   }
 } 

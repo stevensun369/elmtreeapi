@@ -176,7 +176,7 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
   }
 
   // get student and his subjectList
-  student, err := models.GetStudentById(studentID)
+  student, err := db.GetStudentByID(studentID)
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }

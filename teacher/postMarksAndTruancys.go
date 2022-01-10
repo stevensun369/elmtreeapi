@@ -190,8 +190,8 @@ func createTruancy(c *fiber.Ctx) error {
     }
   }
 
-  // getting the truancysCollection for generating id
-  truancysCollection, err := db.GetCollection("truancies")
+  // getting the truanciesCollection for generating id
+  truanciesCollection, err := db.GetCollection("truancies")
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
@@ -200,10 +200,10 @@ func createTruancy(c *fiber.Ctx) error {
   var truancyID = utils.GenID()
   truancyID = utils.GenID()
   var truancyGenID models.Truancy
-  truancysCollection.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
+  truanciesCollection.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
   for (truancyGenID != models.Truancy{Subject: models.ShortSubject{}, Grade: models.Grade{}}) {
     truancyID = utils.GenID()
-    truancysCollection.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
+    truanciesCollection.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
   } 
 
   // some prep variables for the truancy struct
@@ -230,7 +230,7 @@ func createTruancy(c *fiber.Ctx) error {
   }
 
   // inserting the truancy
-  insertedResult, err := truancysCollection.InsertOne(context.Background(), truancy)
+  insertedResult, err := truanciesCollection.InsertOne(context.Background(), truancy)
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
@@ -258,15 +258,15 @@ func motivateTruancy(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
 
-  // getting the truancys collection
-  truancysCollection, err := db.GetCollection("truancies")
+  // getting the truancies collection
+  truanciesCollection, err := db.GetCollection("truancies")
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
 
   // gettint the truancy and updating it
   var truancy models.Truancy
-  truancysCollection.FindOneAndUpdate(context.Background(), bson.M{"truancyID": body["truancyID"]}, bson.D{
+  truanciesCollection.FindOneAndUpdate(context.Background(), bson.M{"truancyID": body["truancyID"]}, bson.D{
     {Key: "$set", Value: bson.D{{Key: "motivated", Value: true}}},
   }).Decode(&truancy)
 

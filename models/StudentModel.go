@@ -1,12 +1,5 @@
 package models
 
-import (
-	"backend-go/db"
-	"context"
-
-	"gopkg.in/mgo.v2/bson"
-)
-
 // the password and the subjectList can be empty
 type Student struct {
 	StudentID   string           `json:"studentID,omitempty" bson:"studentID,omitempty"`
@@ -23,14 +16,4 @@ type Student struct {
 type ShortSubject struct {
 	SubjectID string `json:"subjectID,omitempty" bson:"subjectID,omitempty"`
 	Name      string `json:"name,omitempty" bson:"name,omitempty"`
-}
-
-func GetStudentById(studentID string) (Student, error) {
-	// getting a student
-	var student Student
-  studentsColleciton, err := db.GetCollection("students")
-  
-  studentsColleciton.FindOne(context.Background(), bson.M{"studentID": studentID}).Decode(&student)
-
-	return student, err
 }

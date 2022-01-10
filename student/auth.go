@@ -11,7 +11,6 @@ import (
 	// std
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	// jwt
@@ -39,25 +38,15 @@ func studentMiddleware(c *fiber.Ctx) error {
       return utils.JWTKey, nil
     })
 
-    if err != nil {
-      return c.Status(500).SendString(fmt.Sprintf("%v", err))
-    }
+    utils.CheckError(c, err)
 
     if !tkn.Valid {
       return c.Status(500).SendString("token not valid")
     }
 
-    studentIDBytes, _ := json.Marshal(claims.StudentID)
-    studentIDJSON := string(studentIDBytes)
-    c.Locals("studentID", studentIDJSON)
-
-    gradeBytes, _ := json.Marshal(claims.Grade)
-    gradeJSON := string(gradeBytes)
-    c.Locals("grade", gradeJSON)
-
-    subjectListBytes, _ := json.Marshal(claims.SubjectList)
-    subjectListJSON := string(subjectListBytes)
-    c.Locals("subjectList", subjectListJSON)
+    utils.SetLocals(c, "studentID", claims.StudentID)
+    utils.SetLocals(c, "grade", claims.Grade)
+    utils.SetLocals(c, "subjectList", claims.SubjectList)
   }
 
   if (token == "") {
@@ -76,39 +65,24 @@ func postLogin(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
 
-  // getting the db collection
-  collection, err := db.GetCollection("students")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
-  // getting the student
-  var student models.Student
-  if err = collection.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&student); err != nil {
-    return c.Status(401).JSON(bson.M{
-      "message": "Nu exista niciun elev cu CNP-ul introdus.",
-    })
-  }
+  // getting student by cnp
+  student, err := db.GetStudentByCNP(body["cnp"])
+  utils.CheckMessageError(c, err, "Nu există niciun elev cu CNP-ul introdus.")
 
   // if the student doesn't have a password
   if student.Password == "" {
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body["password"]), 10)
 
-    if err != nil {
-      return c.Status(500).SendString(fmt.Sprintf("%v", err))
-    }
+    utils.CheckError(c, err)
 
     var modifiedStudent models.Student
-    collection.FindOneAndUpdate(context.Background(), bson.M{"cnp": body["cnp"]}, bson.D{
+    db.Students.FindOneAndUpdate(context.Background(), bson.M{"cnp": body["cnp"]}, bson.D{
       {Key: "$set", Value: bson.D{{Key: "password",Value: string(hashedPassword)}}},
     }).Decode(&modifiedStudent)
-
     
     // jwt
     tokenString, err := utils.StudentGenerateToken(modifiedStudent.StudentID, modifiedStudent.Grade, modifiedStudent.SubjectList)
-    if err != nil {
-      return c.Status(500).SendString(fmt.Sprintf("%v", err))
-    }
+    utils.CheckError(c, err)
 
     return c.JSON(bson.M{
       "studentID": modifiedStudent.StudentID,
@@ -127,9 +101,7 @@ func postLogin(c *fiber.Ctx) error {
     compareErr := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(body["password"]))
 
     tokenString, err := utils.StudentGenerateToken(student.StudentID, student.Grade, student.SubjectList)
-    if err != nil {
-      return c.Status(500).SendString(fmt.Sprintf("%v", err))
-    }
+    utils.CheckError(c, err)
 
     if compareErr == nil {
       return c.JSON(bson.M{
@@ -144,9 +116,7 @@ func postLogin(c *fiber.Ctx) error {
         "token": tokenString,
       })
     } else {
-      return c.Status(401).JSON(bson.M{
-        "message": "Nu ați introdus parola validă.",
-      })
+      return utils.MessageError(c, "Nu ați introdus parola validă.",)
     }
   } 
 }

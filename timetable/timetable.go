@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"gopkg.in/mgo.v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func getByGradeID(c *fiber.Ctx) error {
@@ -19,7 +19,7 @@ func getByGradeID(c *fiber.Ctx) error {
 
   var periods []models.Period
   cursor, err := periodsCollection.Find(context.Background(), bson.M{
-    "subject.grade.gradeID": gradeID,
+    "grade.gradeID": gradeID,
   })
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))

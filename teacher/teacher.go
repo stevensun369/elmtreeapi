@@ -29,10 +29,7 @@ func update(c *fiber.Ctx) error {
   var teacherID string
   json.Unmarshal([]byte(teacherIDLocals), &teacherID)
 
-  teacher, err := models.GetTeacherById(teacherID)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  teacher := db.GetTeacherByID(teacherID)
 
   tokenString, err := utils.TeacherGenerateToken(teacher.TeacherID, teacher.HomeroomGrade, teacher.SubjectList)
   if err != nil {

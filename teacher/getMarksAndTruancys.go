@@ -49,37 +49,37 @@ func getMarks(c *fiber.Ctx) error {
   return c.JSON(marks)
 }
 
-// @desc    Get truancys
+// @desc    Get truancies
 // @route   GET /api/teacher/truancy/:subjectID/:studentID
 // @access  Private
-func getTruancys(c *fiber.Ctx) error {
+func gettruancies(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")
   studentID := c.Params("studentID")
 
-  truancysCollection, err := db.GetCollection("truancies")
+  truanciesCollection, err := db.GetCollection("truancies")
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
-  var truancys []models.Truancy
+  var truancies []models.Truancy
 
   options := options.Find()
   options.SetSort(bson.D{{Key: "dateMonth", Value: 1}, {Key: "dateDay", Value: 1}})
-  cursor, err := truancysCollection.Find(context.Background(), bson.M{
+  cursor, err := truanciesCollection.Find(context.Background(), bson.M{
     "subject.subjectID": subjectID,
     "studentID": studentID,
   }, options)
   if err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
-  if err = cursor.All(context.Background(), &truancys); err != nil {
+  if err = cursor.All(context.Background(), &truancies); err != nil {
     return c.Status(500).SendString(fmt.Sprintf("%v", err))
   }
 
-  if len(truancys) == 0 {
-    truancys = []models.Truancy {}
+  if len(truancies) == 0 {
+    truancies = []models.Truancy {}
   }
 
-  return c.JSON(truancys)
+  return c.JSON(truancies)
 }
 
 // @desc    Get Average Mark

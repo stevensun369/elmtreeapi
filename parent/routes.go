@@ -17,9 +17,9 @@ func Routes(app *fiber.App) {
   // get students
   group.Get("/students", parentMiddleware, getStudents)
 
-  // get marks and truancys
+  // get marks and truancies
   group.Get("/mark/:studentID/:subjectID", parentMiddleware, getMarks)
-  group.Get("/truancy/:studentID/:subjectID", parentMiddleware, getTruancys)
+  group.Get("/truancy/:studentID/:subjectID", parentMiddleware, getTruancies)
 
   // get averageMarks
   group.Get("/average", parentMiddleware, getAverageMarks)
