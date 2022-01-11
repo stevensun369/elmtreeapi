@@ -11,7 +11,6 @@ import (
 	// std
 	"context"
 	"encoding/json"
-	"fmt"
 	"math"
 	"strconv"
 
@@ -25,27 +24,14 @@ import (
 func getHomeroomStudents(c *fiber.Ctx) error {
 
   // getting the homeroom grade
-  homeroomGradeLocals := fmt.Sprintf("%v", c.Locals("homeroomGrade"))
   var homeroomGrade models.Grade
-  json.Unmarshal([]byte(homeroomGradeLocals), &homeroomGrade)
+  utils.GetLocals(c.Locals("homeroomGrade"), &homeroomGrade)
 
   // getting the homeroom students
-  var students []models.Student
-  studentsCollection, err := db.GetCollection("students")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
-  cursor, err := studentsCollection.Find(context.Background(), bson.M{
+  students, err := db.GetStudents(bson.M{
     "grade.gradeID": homeroomGrade.GradeID,
-  })
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
-  if err = cursor.All(context.Background(), &students); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.EmptySort)
+  utils.CheckError(c, err)
   
   if len(students) == 0 {
     students = []models.Student {}
@@ -60,16 +46,8 @@ func getHomeroomStudents(c *fiber.Ctx) error {
 func getHomeroomStudentSubjects(c *fiber.Ctx) error {
   studentID := c.Params("studentID")
 
-  // getting the students
-  var student models.Student
-  studentsCollection, err := db.GetCollection("students")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
-  studentsCollection.FindOne(context.Background(), bson.M{
-    "studentID": studentID,
-  }).Decode(&student)
+  student, err := db.GetStudentByID(studentID)
+  utils.CheckError(c, err)
 
   return c.JSON(student.SubjectList)
 }
@@ -80,27 +58,13 @@ func getHomeroomStudentSubjects(c *fiber.Ctx) error {
 func getHomeroomAverageMarks(c *fiber.Ctx) error {
 
   // getting the homeroom grade
-  homeroomGradeLocals := fmt.Sprintf("%v", c.Locals("homeroomGrade"))
   var homeroomGrade models.Grade
-  json.Unmarshal([]byte(homeroomGradeLocals), &homeroomGrade)
+  utils.GetLocals(c.Locals("homeroomGrade"), &homeroomGrade)
 
-
-  var averageMarks []models.AverageMark
-  averageMarksCollection, err := db.GetCollection("averagemarks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
-  cursor, err := averageMarksCollection.Find(context.Background(), bson.M{
+  averageMarks, err := db.GetAverageMarks(bson.M{
     "grade.gradeID": homeroomGrade.GradeID,
-  })
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
-  if err = cursor.All(context.Background(), &averageMarks); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.EmptySort)
+  utils.CheckError(c, err)
 
   if len(averageMarks) == 0 {
     averageMarks = []models.AverageMark {}
@@ -116,27 +80,13 @@ func getHomeroomAverageMarks(c *fiber.Ctx) error {
 func getHomeroomTermMarks(c *fiber.Ctx) error {
 
   // getting the homeroom grade
-  homeroomGradeLocals := fmt.Sprintf("%v", c.Locals("homeroomGrade"))
   var homeroomGrade models.Grade
-  json.Unmarshal([]byte(homeroomGradeLocals), &homeroomGrade)
+  utils.GetLocals(c.Locals("homeroomGrade"), &homeroomGrade)
 
-  // getting the term marks
-  termMarksCollection, err := db.GetCollection("termmarks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  var termMarks []models.TermMark
-
-  cursor, err := termMarksCollection.Find(context.Background(), bson.M{
+  termMarks, err := db.GetTermMarks(bson.M{
     "grade.gradeID": homeroomGrade.GradeID,
-  })
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
-  if err = cursor.All(context.Background(), &termMarks); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.EmptySort)
+  utils.CheckError(c, err)
 
   if len(termMarks) == 0 {
     termMarks = []models.TermMark {}
@@ -156,54 +106,29 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
   term := body["term"]
   termInt, _ := strconv.Atoi(term)
 
-  // term Marks Collection
-  termMarksCollection, err := db.GetCollection("termmarks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
   // checking that there isn't already a termMark
   var termMarkTest models.TermMark
-  termMarksCollection.FindOne(context.Background(), bson.M{
+  db.TermMarks.FindOne(context.Background(), bson.M{
     "studentID": studentID,
     "term": termInt,
   }).Decode(&termMarkTest)
 
   if (termMarkTest != models.TermMark{Grade: models.Grade{}}) {
-    return c.Status(500).JSON(bson.M{
-      "message": "Exista deja o medie pe semestrul " + term,
-    })
+    return utils.MessageError(c, "Exista deja o medie pe semestrul " + term)
   }
 
   // get student and his subjectList
   student, err := db.GetStudentByID(studentID)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  utils.CheckError(c, err)
 
-  // get averageMarks
-  var averageMarks []models.AverageMark
-  averageMarksCollection, err := db.GetCollection("averagemarks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  
-  cursor, err := averageMarksCollection.Find(context.Background(), bson.M{
+  averageMarks, err := db.GetAverageMarks(bson.M{
     "studentID": studentID,
     "term": termInt,
-  })
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
-  if err = cursor.All(context.Background(), &averageMarks); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.EmptySort)
+  utils.CheckError(c, err)
 
   if len(averageMarks) != len(student.SubjectList) {
-    return c.Status(500).JSON(bson.M{
-      "message": "Nu toate mediile au fost incheiate pe semestrul" + term,
-    })
+    return utils.MessageError(c, "Nu toate mediile au fost incheiate pe semestrul " + term)
   }
 
   var value float64 = 0
@@ -218,10 +143,10 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
   var termMarkID = utils.GenID()
   termMarkID = utils.GenID()
   var termMarkGenID models.TermMark
-  termMarksCollection.FindOne(context.Background(), bson.M{"termMarkID": termMarkID}).Decode(&termMarkGenID)
+  db.TermMarks.FindOne(context.Background(), bson.M{"termMarkID": termMarkID}).Decode(&termMarkGenID)
   for (termMarkGenID != models.TermMark{Grade: models.Grade{}}) {
     termMarkID = utils.GenID()
-    termMarksCollection.FindOne(context.Background(), bson.M{"termMarkID": termMarkID}).Decode(&termMarkGenID)
+    db.TermMarks.FindOne(context.Background(), bson.M{"termMarkID": termMarkID}).Decode(&termMarkGenID)
   } 
 
   termMark := models.TermMark{
@@ -232,10 +157,8 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
     Term: termInt,
   }
 
-  insertedResult, err := termMarksCollection.InsertOne(context.Background(), termMark)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  insertedResult, err := db.TermMarks.InsertOne(context.Background(), termMark)
+  utils.CheckError(c, err)
 
   return c.JSON(bson.M{
     "_id": insertedResult.InsertedID,

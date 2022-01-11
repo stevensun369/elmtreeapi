@@ -11,7 +11,6 @@ import (
 	// std packages
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	// jwt
@@ -39,29 +38,19 @@ func teacherMiddleware(c *fiber.Ctx) error {
       return utils.JWTKey, nil
     })
 
-    if err != nil {
-      return c.Status(500).SendString(fmt.Sprintf("%v", err))
-    }
+    utils.CheckError(c, err)
 
     if !tkn.Valid {
-      return c.Status(500).SendString("token not valid")
+      utils.MessageError(c, "token not valid")
     }
 
-    teacherIDBytes, _ := json.Marshal(claims.TeacherID)
-    teacherIDJSON := string(teacherIDBytes)
-    c.Locals("teacherID", teacherIDJSON)
-
-    homeroomBytes, _ := json.Marshal(claims.HomeroomGrade)
-    homeroomJSON := string(homeroomBytes)
-    c.Locals("homeroomGrade", homeroomJSON)
-
-    subjectListBytes, _ := json.Marshal(claims.SubjectList)
-    subjectListJSON := string(subjectListBytes)
-    c.Locals("subjectList", subjectListJSON)
+    utils.SetLocals(c, "teacherID", claims.TeacherID)
+    utils.SetLocals(c, "homeroomGrade", claims.HomeroomGrade)
+    utils.SetLocals(c, "subjectList", claims.SubjectList)
   }
 
   if (token == "") {
-    return c.Status(500).SendString("no token")
+    utils.MessageError(c, "no token")
   }
 
   return c.Next()
@@ -76,38 +65,22 @@ func postLogin(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
 
-  // getting the db collection
-  collection, err := db.GetCollection("teachers")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
-  // getting the teacher
-  var teacher models.Teacher
-  if err = collection.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&teacher); err != nil {
-    return c.Status(401).JSON(bson.M{
-      "message": "Nu există niciun profesor cu CNP-ul introdus.",
-    })
-  }
+  teacher, err := db.GetTeacherByCNP(body["cnp"])
+  utils.CheckMessageError(c, err, "Nu există niciun profesor cu CNP-ul introdus.")
 
   // if the teacher doesn't have a password
   if teacher.Password == "" {
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body["password"]), 10)
-    if err != nil {
-      return c.Status(500).SendString(fmt.Sprintf("%v", err))
-    }
+    utils.CheckError(c, err)
 
     var modifiedTeacher models.Teacher
-    collection.FindOneAndUpdate(context.Background(), bson.M{"cnp": body["cnp"]}, bson.D{
+    db.Teachers.FindOneAndUpdate(context.Background(), bson.M{"cnp": body["cnp"]}, bson.D{
       {Key: "$set", Value: bson.D{{Key: "password",Value: string(hashedPassword)}}},
     }).Decode(&modifiedTeacher)
-
     
     // jwt
     tokenString, err := utils.TeacherGenerateToken(modifiedTeacher.TeacherID, modifiedTeacher.HomeroomGrade, modifiedTeacher.SubjectList)
-    if err != nil {
-      return c.Status(500).SendString(fmt.Sprintf("%v", err))
-    }
+    utils.CheckError(c, err)
 
     return c.JSON(bson.M{
       "teacherID": modifiedTeacher.TeacherID,
@@ -125,9 +98,7 @@ func postLogin(c *fiber.Ctx) error {
     compareErr := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(body["password"]))
 
     tokenString, err := utils.TeacherGenerateToken(teacher.TeacherID, teacher.HomeroomGrade, teacher.SubjectList)
-    if err != nil {
-      return c.Status(500).SendString(fmt.Sprintf("%v", err))
-    }
+    utils.CheckError(c, err)
 
     if compareErr == nil {
       return c.JSON(bson.M{
@@ -141,9 +112,7 @@ func postLogin(c *fiber.Ctx) error {
         "token": tokenString,
       })
     } else {
-      return c.Status(401).JSON(bson.M{
-        "message": "Nu ați introdus parola validă.",
-      })
+      return utils.MessageError(c, "Nu ați introdus parola validă.")
     }
   } 
 }

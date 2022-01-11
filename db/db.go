@@ -46,6 +46,9 @@ var GradeSort interface{} = bson.D{
   {Key: "grade.gradeNumber", Value: 1}, 
   {Key: "grade.gradeLetter", Value: 1},
 }
+var LastNameSort interface{} = bson.D{
+  {Key: "lastName", Value: 1},
+}
 
 // initializing database
 func InitDatabase() {

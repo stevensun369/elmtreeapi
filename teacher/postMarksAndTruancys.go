@@ -11,7 +11,6 @@ import (
 	// std
 	"context"
 	"encoding/json"
-	"fmt"
 	"math"
 	"strconv"
 
@@ -45,20 +44,11 @@ func createMark(c *fiber.Ctx) error {
   averageMarkTermTwo := false
   var averageMarks []models.AverageMark
 
-  averageMarksCollection, err := db.GetCollection("averagemarks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  cursor, err := averageMarksCollection.Find(context.Background(), bson.M{
+  averageMarks, err := db.GetAverageMarks(bson.M{
     "subject.subjectID": subjectID, 
     "studentID": studentID,
-  })
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  if err = cursor.All(context.Background(), &averageMarks); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.EmptySort)
+  utils.CheckError(c, err)
 
   // now checking for averageMarks for each term
   for _, averageMark := range averageMarks {
@@ -72,24 +62,17 @@ func createMark(c *fiber.Ctx) error {
     }
   }
   if averageMarkTermOne && averageMarkTermTwo {
-    return c.Status(500).JSON(bson.M{
-      "message": "Media pe ambele semestre a fost încheiată.",
-    })
+    return utils.MessageError(c, "Media pe ambele semestre a fost încheiată.")
   } else {
     if averageMarkTermOne && isTermOne {
-      return c.Status(500).JSON(bson.M{
-        "message": "Media pe primul semestru a fost încheiată.",
-      })
+      return utils.MessageError(c, "Media pe primul semestru a fost încheiată.")
     } else if averageMarkTermTwo && !isTermOne {
-      return c.Status(500).JSON(bson.M{
-        "message": "Media pe al doilea semestru a fost încheiată.",
-      })
+      return utils.MessageError(c, "Media pe al doilea semestru a fost încheiată.")
     }
   }
 
-  subjectListLocals := fmt.Sprintf("%v", c.Locals("subjectList"))
   var subjectList []models.Subject
-  json.Unmarshal([]byte(subjectListLocals), &subjectList)
+  utils.GetLocals(c.Locals("subjectList"), &subjectList)
 
   // getting the currSubject
   var currSubject models.Subject
@@ -99,20 +82,14 @@ func createMark(c *fiber.Ctx) error {
     }
   }
 
-  // getting the marksCollection for generating id
-  marksCollection, err := db.GetCollection("marks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
   // generating id
   var markID = utils.GenID()
   markID = utils.GenID()
   var markGenID models.Mark
-  marksCollection.FindOne(context.Background(), bson.M{"markID": markID}).Decode(&markGenID)
+  db.Marks.FindOne(context.Background(), bson.M{"markID": markID}).Decode(&markGenID)
   for (markGenID != models.Mark{Subject: models.ShortSubject{}, Grade: models.Grade{}}) {
     markID = utils.GenID()
-    marksCollection.FindOne(context.Background(), bson.M{"markID": markID}).Decode(&markGenID)
+    db.Marks.FindOne(context.Background(), bson.M{"markID": markID}).Decode(&markGenID)
   } 
 
   // some prep variables for the mark struct
@@ -139,10 +116,8 @@ func createMark(c *fiber.Ctx) error {
   }
 
   // inserting the mark
-  insertedResult, err := marksCollection.InsertOne(context.Background(), mark)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  insertedResult, err := db.Marks.InsertOne(context.Background(), mark)
+  utils.CheckError(c, err)
 
   return c.JSON(bson.M{
     "_id": insertedResult.InsertedID,
@@ -178,9 +153,8 @@ func createTruancy(c *fiber.Ctx) error {
   // deciding the term of the truancy
   isTermOne := utils.IsTermOne(dateDay, dateMonth)
 
-  subjectListLocals := fmt.Sprintf("%v", c.Locals("subjectList"))
   var subjectList []models.Subject
-  json.Unmarshal([]byte(subjectListLocals), &subjectList)
+  utils.GetLocals(c.Locals("subjectList"), &subjectList)
 
   // getting the currSubject
   var currSubject models.Subject
@@ -190,20 +164,15 @@ func createTruancy(c *fiber.Ctx) error {
     }
   }
 
-  // getting the truanciesCollection for generating id
-  truanciesCollection, err := db.GetCollection("truancies")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
 
   // generating id
   var truancyID = utils.GenID()
   truancyID = utils.GenID()
   var truancyGenID models.Truancy
-  truanciesCollection.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
+  db.Truancies.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
   for (truancyGenID != models.Truancy{Subject: models.ShortSubject{}, Grade: models.Grade{}}) {
     truancyID = utils.GenID()
-    truanciesCollection.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
+    db.Truancies.FindOne(context.Background(), bson.M{"truancyID": truancyID}).Decode(&truancyGenID)
   } 
 
   // some prep variables for the truancy struct
@@ -230,10 +199,8 @@ func createTruancy(c *fiber.Ctx) error {
   }
 
   // inserting the truancy
-  insertedResult, err := truanciesCollection.InsertOne(context.Background(), truancy)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  insertedResult, err := db.Truancies.InsertOne(context.Background(), truancy)
+  utils.CheckError(c, err)
 
   return c.JSON(bson.M{
     "_id": insertedResult.InsertedID,
@@ -258,15 +225,9 @@ func motivateTruancy(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
 
-  // getting the truancies collection
-  truanciesCollection, err := db.GetCollection("truancies")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
   // gettint the truancy and updating it
   var truancy models.Truancy
-  truanciesCollection.FindOneAndUpdate(context.Background(), bson.M{"truancyID": body["truancyID"]}, bson.D{
+  db.Truancies.FindOneAndUpdate(context.Background(), bson.M{"truancyID": body["truancyID"]}, bson.D{
     {Key: "$set", Value: bson.D{{Key: "motivated", Value: true}}},
   }).Decode(&truancy)
 
@@ -282,14 +243,10 @@ func createAverageMark(c *fiber.Ctx) error {
   subjectID := body["subjectID"]
   studentID := body["studentID"]
   term := body["term"]
-  termInt, err := strconv.Atoi(term)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  termInt, _ := strconv.Atoi(term)
 
-  subjectListLocals := fmt.Sprintf("%v", c.Locals("subjectList"))
   var subjectList []models.Subject
-  json.Unmarshal([]byte(subjectListLocals), &subjectList)
+  utils.GetLocals(c.Locals("subjectList"), &subjectList)
 
   // getting the currSubject
   var currSubject models.Subject
@@ -299,41 +256,22 @@ func createAverageMark(c *fiber.Ctx) error {
     }
   }
 
-  // getting the averageMark collection
-  averageMarksCollection, err := db.GetCollection("averagemarks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-
   // generating id
   var averageMarkID = utils.GenID()
   averageMarkID = utils.GenID()
   var averageMarkGenID models.AverageMark
-  averageMarksCollection.FindOne(context.Background(), bson.M{"averageMarkID": averageMarkID}).Decode(&averageMarkGenID)
+  db.AverageMarks.FindOne(context.Background(), bson.M{"averageMarkID": averageMarkID}).Decode(&averageMarkGenID)
   for (averageMarkGenID != models.AverageMark{Subject: models.ShortSubject{}, Grade: models.Grade{}}) {
     averageMarkID = utils.GenID()
-    averageMarksCollection.FindOne(context.Background(), bson.M{"averageMarkID": averageMarkID}).Decode(&averageMarkGenID)
+    db.AverageMarks.FindOne(context.Background(), bson.M{"averageMarkID": averageMarkID}).Decode(&averageMarkGenID)
   } 
 
-  // getting the markscollection
-  marksCollection, err := db.GetCollection("marks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-    
-  // getting all the related marks
-  var marks []models.Mark
-  cursor, err := marksCollection.Find(context.Background(), bson.M{
+  marks, err := db.GetMarks(bson.M{
     "subject.subjectID": subjectID,
     "studentID": studentID,
     "term": termInt,
-  })
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  if err = cursor.All(context.Background(), &marks); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.EmptySort)
+  utils.CheckError(c, err)
 
   markValuesCounter := 0
   marksCounter := 0
@@ -357,10 +295,8 @@ func createAverageMark(c *fiber.Ctx) error {
     Term: termInt,
   }
 
-  insertedResult, err := averageMarksCollection.InsertOne(context.Background(), averageMark)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  insertedResult, err := db.AverageMarks.InsertOne(context.Background(), averageMark)
+  utils.CheckError(c, err)
 
   return c.JSON(bson.M{
     "_id": insertedResult.InsertedID,

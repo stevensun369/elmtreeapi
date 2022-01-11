@@ -6,14 +6,12 @@ import (
 	// internal packages
 	"backend-go/db"
 	"backend-go/models"
+	"backend-go/utils"
 
 	// std
-	"context"
-	"fmt"
 
 	// mongodb
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // @desc    Get marks
@@ -23,24 +21,11 @@ func getMarks(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")
   studentID := c.Params("studentID")
 
-  marksCollection, err := db.GetCollection("marks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  var marks []models.Mark
-
-  options := options.Find()
-  options.SetSort(bson.D{{Key: "dateMonth", Value: 1}, {Key: "dateDay", Value: 1}})
-  cursor, err := marksCollection.Find(context.Background(), bson.M{
+  marks, err := db.GetMarks(bson.M{
     "subject.subjectID": subjectID,
-    "studentID": studentID,
-  }, options)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  if err = cursor.All(context.Background(), &marks); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+   "studentID": studentID,
+  }, db.DateSort)
+  utils.CheckError(c, err)
 
   if len(marks) == 0 {
     marks = []models.Mark {}
@@ -52,28 +37,15 @@ func getMarks(c *fiber.Ctx) error {
 // @desc    Get truancies
 // @route   GET /api/teacher/truancy/:subjectID/:studentID
 // @access  Private
-func gettruancies(c *fiber.Ctx) error {
+func getTruancies(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")
   studentID := c.Params("studentID")
 
-  truanciesCollection, err := db.GetCollection("truancies")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  var truancies []models.Truancy
-
-  options := options.Find()
-  options.SetSort(bson.D{{Key: "dateMonth", Value: 1}, {Key: "dateDay", Value: 1}})
-  cursor, err := truanciesCollection.Find(context.Background(), bson.M{
+  truancies, err := db.GetTruancies(bson.M{
     "subject.subjectID": subjectID,
-    "studentID": studentID,
-  }, options)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  if err = cursor.All(context.Background(), &truancies); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+   "studentID": studentID,
+  }, db.DateSort)
+  utils.CheckError(c, err)
 
   if len(truancies) == 0 {
     truancies = []models.Truancy {}
@@ -89,24 +61,11 @@ func getAverageMarks(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")
   studentID := c.Params("studentID")
 
-  averageMarksCollection, err := db.GetCollection("averagemarks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  var averageMarks []models.AverageMark
-
-  options := options.Find()
-  options.SetSort(bson.D{{Key: "term", Value: 1}})
-  cursor, err := averageMarksCollection.Find(context.Background(), bson.M{
+  averageMarks, err := db.GetAverageMarks(bson.M{
     "subject.subjectID": subjectID,
     "studentID": studentID,
-  }, options)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  if err = cursor.All(context.Background(), &averageMarks); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.TermSort)
+  utils.CheckError(c, err)
 
   if len(averageMarks) == 0 {
     averageMarks = []models.AverageMark {}
@@ -121,23 +80,10 @@ func getAverageMarks(c *fiber.Ctx) error {
 func getAverageMarksSubject(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")
 
-  averageMarksCollection, err := db.GetCollection("averagemarks")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  var averageMarks []models.AverageMark
-
-  options := options.Find()
-  options.SetSort(bson.D{{Key: "term", Value: 1}})
-  cursor, err := averageMarksCollection.Find(context.Background(), bson.M{
+  averageMarks, err := db.GetAverageMarks(bson.M{
     "subject.subjectID": subjectID,
-  }, options)
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  if err = cursor.All(context.Background(), &averageMarks); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.TermSort)
+  utils.CheckError(c, err)
 
   if len(averageMarks) == 0 {
     averageMarks = []models.AverageMark {}

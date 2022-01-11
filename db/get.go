@@ -39,12 +39,22 @@ func GetStudentByIDAndCNP(cnp string, studentID string) (models.Student, error) 
 }
 
 // teacher
-func GetTeacherByID(teacherID string) (models.Teacher) {
+func GetTeacherByID(teacherID string) (models.Teacher, error) {
 	// getting a teacher
 	var teacher models.Teacher
-  Teachers.FindOne(context.Background(), bson.M{"teacherID": teacherID}).Decode(&teacher)
+
+  err := Teachers.FindOne(context.Background(), bson.M{"teacherID": teacherID}).Decode(&teacher)
 	
-	return teacher
+	return teacher, err
+}
+
+func GetTeacherByCNP(cnp string) (models.Teacher, error) {
+	// getting a teacher
+	var teacher models.Teacher
+
+  err := Teachers.FindOne(context.Background(), bson.M{"cnp": cnp}).Decode(&teacher)
+	
+	return teacher, err
 }
 
 // marks
