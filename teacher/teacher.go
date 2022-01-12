@@ -79,3 +79,18 @@ func getSubjectStudents(c *fiber.Ctx) error {
 
   return c.JSON(students)
 }
+
+// @desc    getting timetable
+// @route   GET /api/teacher/timetable
+// @access  Private
+func getPeriods(c *fiber.Ctx) error {
+  var teacherID string
+  utils.GetLocals(c.Locals("teacherID"), &teacherID)
+ 
+  periods, err := db.GetPeriods(bson.M{
+    "teacher.teacherID": teacherID,
+  }, db.PeriodSort)
+  utils.CheckError(c, err)
+
+  return c.JSON(periods)
+}

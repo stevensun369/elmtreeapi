@@ -58,3 +58,14 @@ func parentAddStudent(c *fiber.Ctx) error {
     },
   )
 }
+
+func getPeriods(c *fiber.Ctx) error {
+  gradeID := c.Params("gradeID")
+
+  periods, err := db.GetPeriods(bson.M{
+    "grade.gradeID": gradeID,
+  }, db.PeriodSort)
+  utils.CheckError(c, err)
+
+  return c.JSON(periods)
+}

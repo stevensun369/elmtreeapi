@@ -75,11 +75,11 @@ func InitDatabase() {
   Truancies = getCollection("truancies")
 }
 
-func GetCollection(collectionName string) (*mongo.Collection, error) {
-  collection := Client.Database("elmtree").Collection(collectionName)
+// func GetCollection(collectionName string) (*mongo.Collection, error) {
+//   collection := Client.Database("elmtree").Collection(collectionName)
 
-  return collection, nil
-}
+//   return collection, nil
+// }
 
 func getCollection(collectionName string) (*mongo.Collection) {
   return Client.Database("elmtree").Collection(collectionName)

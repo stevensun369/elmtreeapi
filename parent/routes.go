@@ -11,6 +11,9 @@ func Routes(app *fiber.App) {
   // login parent
   group.Post("/login", parentLogin)
 
+  // get timetable
+  group.Get("/timetable/:gradeID", parentMiddleware, getPeriods)
+
   // add student
   group.Put("/students", parentMiddleware, parentAddStudent)
 

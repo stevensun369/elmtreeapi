@@ -11,7 +11,6 @@ type Period struct {
 	Subject  ShortSubject `json:"subject,omitempty" bson:"subject,omitempty"`
 	Teacher  ShortTeacher `json:"teacher,omitempty" bson:"teacher,omitempty"`
 	Assigned bool         `json:"assigned,omitempty" bson:"assigned,omitempty"`
-	Split    string       `json:"split,omitempty" bson:"split,omitempty"`
 }
 
 type ShortTeacher struct {

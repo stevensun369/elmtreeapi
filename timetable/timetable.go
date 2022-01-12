@@ -2,9 +2,7 @@ package timetable
 
 import (
 	"backend-go/db"
-	"backend-go/models"
-	"context"
-	"fmt"
+	"backend-go/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,42 +10,22 @@ import (
 
 func getByGradeID(c *fiber.Ctx) error {
   gradeID := c.Params("gradeID")
-  periodsCollection, err := db.GetCollection("periods")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
 
-  var periods []models.Period
-  cursor, err := periodsCollection.Find(context.Background(), bson.M{
+  periods, err := db.GetPeriods(bson.M{
     "grade.gradeID": gradeID,
-  })
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  if err = cursor.All(context.Background(), &periods); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.PeriodSort)
+  utils.CheckError(c, err)
 
   return c.JSON(periods)
 }
 
 func getByTeacherID(c *fiber.Ctx) error {
   teacherID := c.Params("teacherID")
-  periodsCollection, err := db.GetCollection("periods")
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
 
-  var periods []models.Period
-  cursor, err := periodsCollection.Find(context.Background(), bson.M{
+  periods, err := db.GetPeriods(bson.M{
     "teacherID": teacherID,
-  })
-  if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
-  if err = cursor.All(context.Background(), &periods); err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+  }, db.PeriodSort)
+  utils.CheckError(c, err)
 
   return c.JSON(periods)
 }

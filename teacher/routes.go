@@ -9,9 +9,10 @@ func Routes(app *fiber.App) {
 
   // login teacher
   group.Post("/login", postLogin)
-
-  // get homeroom info
-
+  
+  // get timetable
+  group.Get("/timetable", teacherMiddleware, getPeriods)
+  
   // get homeroom students
   group.Get("/homeroom", teacherMiddleware, getHomeroomStudents)
 
@@ -55,5 +56,6 @@ func Routes(app *fiber.App) {
 
   // get average marks for multiple students
   group.Get("/average/:subjectID", teacherMiddleware, getAverageMarksSubject)
+
 
 }
