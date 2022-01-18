@@ -31,7 +31,9 @@ func getHomeroomStudents(c *fiber.Ctx) error {
   students, err := db.GetStudents(bson.M{
     "grade.gradeID": homeroomGrade.GradeID,
   }, db.EmptySort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
   
   if len(students) == 0 {
     students = []models.Student {}
@@ -47,7 +49,9 @@ func getHomeroomStudentSubjects(c *fiber.Ctx) error {
   studentID := c.Params("studentID")
 
   student, err := db.GetStudentByID(studentID)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   return c.JSON(student.SubjectList)
 }
@@ -64,7 +68,9 @@ func getHomeroomAverageMarks(c *fiber.Ctx) error {
   averageMarks, err := db.GetAverageMarks(bson.M{
     "grade.gradeID": homeroomGrade.GradeID,
   }, db.EmptySort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(averageMarks) == 0 {
     averageMarks = []models.AverageMark {}
@@ -86,7 +92,9 @@ func getHomeroomTermMarks(c *fiber.Ctx) error {
   termMarks, err := db.GetTermMarks(bson.M{
     "grade.gradeID": homeroomGrade.GradeID,
   }, db.EmptySort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(termMarks) == 0 {
     termMarks = []models.TermMark {}
@@ -119,13 +127,17 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
 
   // get student and his subjectList
   student, err := db.GetStudentByID(studentID)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   averageMarks, err := db.GetAverageMarks(bson.M{
     "studentID": studentID,
     "term": termInt,
   }, db.EmptySort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(averageMarks) != len(student.SubjectList) {
     return utils.MessageError(c, "Nu toate mediile au fost incheiate pe semestrul " + term)
@@ -158,7 +170,9 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
   }
 
   insertedResult, err := db.TermMarks.InsertOne(context.Background(), termMark)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   return c.JSON(bson.M{
     "_id": insertedResult.InsertedID,

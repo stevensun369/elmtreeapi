@@ -12,7 +12,13 @@ func Routes(app *fiber.App) {
   group.Post("/login", parentLogin)
 
   // get timetable
-  group.Get("/timetable/:gradeID", parentMiddleware, getPeriods)
+  group.Get("/timetable/:studentID", parentMiddleware, getPeriods)
+
+  // get periods teacher
+  group.Get("/timetable/:studentID/teachers", parentMiddleware, getPeriodsTeachers)
+
+  // get school
+  group.Get("/school/:studentID", parentMiddleware, getSchool)
 
   // add student
   group.Put("/students", parentMiddleware, parentAddStudent)
@@ -29,5 +35,8 @@ func Routes(app *fiber.App) {
 
   // get termMarks
   group.Get("/term", parentMiddleware, getTermMarks)
+
+  // get finalMarks
+  group.Get("/final/:studentID/:subjectID", parentMiddleware, getFinalMarks)
 
 }

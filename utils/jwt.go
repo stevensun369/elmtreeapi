@@ -11,11 +11,11 @@ import (
 var JWTKey = []byte("123456")
 
 // claims
-
 type TeacherClaims struct {
   TeacherID string `json:"teacherID"`
   HomeroomGrade models.Grade `json:"homeroomGrade"`
   SubjectList []models.Subject `json:"subjectList"`
+  SchoolID string `json:"schoolID"`
   jwt.StandardClaims
 }
 
@@ -33,8 +33,7 @@ type ParentClaims struct {
 }
 
 // generation functions
-
-func TeacherGenerateToken(id string, homeroomGrade models.Grade, subjectList []models.Subject) (tokenString string, err error) {
+func TeacherGenerateToken(id string, homeroomGrade models.Grade, subjectList []models.Subject, schoolID string) (tokenString string, err error) {
   // one year has 8760 hours
   expirationTime := time.Now().Add(8760 * time.Hour)
 
@@ -43,6 +42,7 @@ func TeacherGenerateToken(id string, homeroomGrade models.Grade, subjectList []m
     TeacherID: id,
     HomeroomGrade: homeroomGrade,
     SubjectList: subjectList,
+    SchoolID: schoolID,
     StandardClaims: jwt.StandardClaims{
       ExpiresAt: expirationTime.Unix(),
     },

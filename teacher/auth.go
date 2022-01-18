@@ -38,7 +38,9 @@ func teacherMiddleware(c *fiber.Ctx) error {
       return utils.JWTKey, nil
     })
 
-    utils.CheckError(c, err)
+    if err != nil {
+      utils.Error(c, err)
+    }
 
     if !tkn.Valid {
       utils.MessageError(c, "token not valid")
@@ -47,6 +49,8 @@ func teacherMiddleware(c *fiber.Ctx) error {
     utils.SetLocals(c, "teacherID", claims.TeacherID)
     utils.SetLocals(c, "homeroomGrade", claims.HomeroomGrade)
     utils.SetLocals(c, "subjectList", claims.SubjectList)
+    utils.SetLocals(c, "schoolID", claims.SchoolID)
+
   }
 
   if (token == "") {
@@ -71,7 +75,9 @@ func postLogin(c *fiber.Ctx) error {
   // if the teacher doesn't have a password
   if teacher.Password == "" {
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body["password"]), 10)
-    utils.CheckError(c, err)
+    if err != nil {
+      utils.Error(c, err)
+    }
 
     var modifiedTeacher models.Teacher
     db.Teachers.FindOneAndUpdate(context.Background(), bson.M{"cnp": body["cnp"]}, bson.D{
@@ -79,8 +85,10 @@ func postLogin(c *fiber.Ctx) error {
     }).Decode(&modifiedTeacher)
     
     // jwt
-    tokenString, err := utils.TeacherGenerateToken(modifiedTeacher.TeacherID, modifiedTeacher.HomeroomGrade, modifiedTeacher.SubjectList)
-    utils.CheckError(c, err)
+    tokenString, err := utils.TeacherGenerateToken(modifiedTeacher.TeacherID, modifiedTeacher.HomeroomGrade, modifiedTeacher.SubjectList, modifiedTeacher.SchoolID)
+    if err != nil {
+      utils.Error(c, err)
+    }
 
     return c.JSON(bson.M{
       "teacherID": modifiedTeacher.TeacherID,
@@ -97,8 +105,10 @@ func postLogin(c *fiber.Ctx) error {
 
     compareErr := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(body["password"]))
 
-    tokenString, err := utils.TeacherGenerateToken(teacher.TeacherID, teacher.HomeroomGrade, teacher.SubjectList)
-    utils.CheckError(c, err)
+    tokenString, err := utils.TeacherGenerateToken(teacher.TeacherID, teacher.HomeroomGrade, teacher.SubjectList, teacher.SchoolID)
+    if err != nil {
+      utils.Error(c, err)
+    }
 
     if compareErr == nil {
       return c.JSON(bson.M{

@@ -4,6 +4,7 @@ import (
 	"backend-go/db"
 	"backend-go/models"
 	"backend-go/utils"
+	"context"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,10 +24,14 @@ func getStudents(c *fiber.Ctx) error {
     "studentID": bson.M{"$in": studentIDList},
   }, db.GradeSort)
 
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   tokenString, err := utils.ParentGenerateToken(parentID, studentIDList)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(students) == 0 {
     students = []models.Student {}
@@ -52,7 +57,9 @@ func getMarks(c *fiber.Ctx) error {
     "subject.subjectID": subjectID,
   }, db.DateSort)
 
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(marks) == 0 {
     marks = []models.Mark {}
@@ -72,7 +79,9 @@ func getTruancies(c *fiber.Ctx) error {
     "studentID": studentID,
     "subject.subjectID": subjectID,
   }, db.DateSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(truancies) == 0 {
     truancies = []models.Truancy {}
@@ -91,7 +100,9 @@ func getAverageMarks(c *fiber.Ctx) error {
   averageMarks, err := db.GetAverageMarks(bson.M{
     "studentID": bson.M{"$in": studentIDList},
   }, db.TermSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(averageMarks) == 0 {
     averageMarks = []models.AverageMark {}
@@ -110,11 +121,108 @@ func getTermMarks(c *fiber.Ctx) error {
   termMarks, err := db.GetTermMarks(bson.M{
     "studentID": bson.M{"$in": studentIDList},
   }, db.TermSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
   
   if len(termMarks) == 0 {
     termMarks = []models.TermMark {}
   }
   
   return c.JSON(termMarks)
+}
+
+// @desc    Get final marks by subjectID
+// @route   GET /api/parent/final/:studentID/:subjectID
+// @access  Private
+func getFinalMarks(c *fiber.Ctx) error {
+  subjectID := c.Params("subjectID")
+  studentID := c.Params("studentID")
+
+  finalMarks, err := db.GetFinalMarks(bson.M{
+    "subject.subjectID": subjectID,
+    "studentID": studentID,
+  }, db.EmptySort)
+  if err != nil {
+    utils.Error(c, err)
+  }
+
+  if len(finalMarks) == 0 {
+    finalMarks = []models.FinalMark {}
+  }
+
+  return c.JSON(finalMarks)
+}
+
+func getPeriods(c *fiber.Ctx) error {
+  studentID := c.Params("studentID")
+
+  student, err := db.GetStudentByID(studentID)
+  if err != nil {
+    utils.Error(c, err)
+  }
+
+  subjectList := student.SubjectList
+  var subjectIDList []string
+  for _, subject := range subjectList {
+    subjectIDList = append(subjectIDList, subject.SubjectID)
+  }
+
+  periods, err := db.GetPeriods(bson.M{
+    "subject.subjectID": bson.M{"$in": subjectIDList},
+  }, db.PeriodSort)
+  if err != nil {
+    utils.Error(c, err)
+  }
+
+  return c.JSON(periods)
+}
+
+// @desc   Get timetable
+// @route  GET /api/parent/timetable/:studentID/teachers
+// @access Private
+func getPeriodsTeachers(c *fiber.Ctx) error {
+  studentID := c.Params("studentID")
+
+  student, err := db.GetStudentByID(studentID)
+  if err != nil {
+    utils.Error(c, err)
+  }
+
+  subjectList := student.SubjectList
+  var subjectIDList []string
+  for _, subject := range subjectList {
+    subjectIDList = append(subjectIDList, subject.SubjectID)
+  }
+
+  teachers, err := db.GetTeachers(bson.M{
+    "subjectList.subjectID": bson.M{"$in" : subjectIDList},
+  }, db.EmptySort)
+  if err != nil {
+    return utils.Error(c, err)
+  }
+
+  return c.JSON(teachers)
+}
+
+// @desc   Get school
+// @route  GET /api/parent/school/:studentID/
+// @access Private
+func getSchool(c *fiber.Ctx) error {
+  studentID := c.Params("studentID")
+
+  student, err := db.GetStudentByID(studentID)
+  if err != nil {
+    utils.Error(c, err)
+  }
+  
+  var school models.School
+  err = db.Schools.FindOne(context.Background(), bson.M{
+    "schoolID": student.Grade.SchoolID,
+  }).Decode(&school)
+  if err != nil {
+    utils.Error(c, err)
+  }
+
+  return c.JSON(school)
 }

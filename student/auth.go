@@ -38,7 +38,9 @@ func studentMiddleware(c *fiber.Ctx) error {
       return utils.JWTKey, nil
     })
 
-    utils.CheckError(c, err)
+    if err != nil {
+      utils.Error(c, err)
+    }
 
     if !tkn.Valid {
       return c.Status(500).SendString("token not valid")
@@ -50,7 +52,7 @@ func studentMiddleware(c *fiber.Ctx) error {
   }
 
   if (token == "") {
-    return c.Status(500).SendString("no token")
+    return utils.MessageError(c, "no token")
   }
 
   return c.Next()
@@ -73,7 +75,9 @@ func postLogin(c *fiber.Ctx) error {
   if student.Password == "" {
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body["password"]), 10)
 
-    utils.CheckError(c, err)
+    if err != nil {
+      utils.Error(c, err)
+    }
 
     var modifiedStudent models.Student
     db.Students.FindOneAndUpdate(context.Background(), bson.M{"cnp": body["cnp"]}, bson.D{
@@ -82,7 +86,9 @@ func postLogin(c *fiber.Ctx) error {
     
     // jwt
     tokenString, err := utils.StudentGenerateToken(modifiedStudent.StudentID, modifiedStudent.Grade, modifiedStudent.SubjectList)
-    utils.CheckError(c, err)
+    if err != nil {
+      utils.Error(c, err)
+    }
 
     return c.JSON(bson.M{
       "studentID": modifiedStudent.StudentID,
@@ -101,7 +107,9 @@ func postLogin(c *fiber.Ctx) error {
     compareErr := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(body["password"]))
 
     tokenString, err := utils.StudentGenerateToken(student.StudentID, student.Grade, student.SubjectList)
-    utils.CheckError(c, err)
+    if err != nil {
+      utils.Error(c, err)
+    }
 
     if compareErr == nil {
       return c.JSON(bson.M{

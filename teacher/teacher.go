@@ -5,6 +5,7 @@ import (
 	"backend-go/db"
 	"backend-go/models"
 	"backend-go/utils"
+	"context"
 
 	// std
 
@@ -26,10 +27,14 @@ func update(c *fiber.Ctx) error {
   utils.GetLocals(c.Locals("teacherID"), &teacherID)
 
   teacher, err := db.GetTeacherByID(teacherID)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
-  tokenString, err := utils.TeacherGenerateToken(teacher.TeacherID, teacher.HomeroomGrade, teacher.SubjectList)
-  utils.CheckError(c, err)
+  tokenString, err := utils.TeacherGenerateToken(teacher.TeacherID, teacher.HomeroomGrade, teacher.SubjectList, teacher.SchoolID)
+  if err != nil {
+    utils.Error(c, err)
+  } 
 
   return c.JSON(bson.M{
     "subjectList": teacher.SubjectList,
@@ -53,7 +58,9 @@ func getStudents(c *fiber.Ctx) error {
   students, err := db.GetStudents(bson.M{
     "subjectList.subjectID":  bson.M{"$in": subjectIDList},
   }, db.EmptySort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(students) == 0 {
     students = []models.Student {}
@@ -71,7 +78,9 @@ func getSubjectStudents(c *fiber.Ctx) error {
   students, err := db.GetStudents(bson.M{
     "subjectList.subjectID": subjectID,
   }, db.LastNameSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(students) == 0 {
     students = []models.Student {}
@@ -84,13 +93,38 @@ func getSubjectStudents(c *fiber.Ctx) error {
 // @route   GET /api/teacher/timetable
 // @access  Private
 func getPeriods(c *fiber.Ctx) error {
-  var teacherID string
-  utils.GetLocals(c.Locals("teacherID"), &teacherID)
+  var subjectList []models.Subject
+  utils.GetLocals(c.Locals("subjectList"), &subjectList)
  
+  var subjectIDList []string
+  for _, subject := range subjectList {
+    subjectIDList = append(subjectIDList, subject.SubjectID)
+  }
+  
   periods, err := db.GetPeriods(bson.M{
-    "teacher.teacherID": teacherID,
+    "subject.subjectID": bson.M{"$in": subjectIDList},
   }, db.PeriodSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   return c.JSON(periods)
+}
+
+// @desc    getting timetable
+// @route   GET /api/teacher/school
+// @access  Private
+func getSchool(c *fiber.Ctx) error {
+  var schoolID string
+  utils.GetLocals(c.Locals("schoolID"), &schoolID)
+ 
+  var school models.School
+  err := db.Schools.FindOne(context.Background(), bson.M{
+    "schoolID": schoolID,
+  }).Decode(&school)
+  if err != nil {
+    utils.Error(c, err)
+  }
+  
+  return c.JSON(school)
 }

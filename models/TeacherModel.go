@@ -9,4 +9,5 @@ type Teacher struct {
 	Password      string    `json:"password" bson:"password"`
 	HomeroomGrade Grade     `json:"homeroomGrade" bson:"homeroomGrade"`
 	SubjectList   []Subject `json:"subjectList" bson:"subjectList"`
+	SchoolID string `json:"schoolID,omitempty" bson:"schoolID,omitempty"`
 }

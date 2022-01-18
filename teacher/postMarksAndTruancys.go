@@ -11,7 +11,6 @@ import (
 	// std
 	"context"
 	"encoding/json"
-	"math"
 	"strconv"
 
 	// godotenv
@@ -48,7 +47,9 @@ func createMark(c *fiber.Ctx) error {
     "subject.subjectID": subjectID, 
     "studentID": studentID,
   }, db.EmptySort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   // now checking for averageMarks for each term
   for _, averageMark := range averageMarks {
@@ -100,6 +101,7 @@ func createMark(c *fiber.Ctx) error {
   } else {
     term = 2
   }
+
   // filling in all the values to a mark struct
   mark := models.Mark{
     MarkID: markID,
@@ -117,7 +119,9 @@ func createMark(c *fiber.Ctx) error {
 
   // inserting the mark
   insertedResult, err := db.Marks.InsertOne(context.Background(), mark)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   return c.JSON(bson.M{
     "_id": insertedResult.InsertedID,
@@ -200,7 +204,9 @@ func createTruancy(c *fiber.Ctx) error {
 
   // inserting the truancy
   insertedResult, err := db.Truancies.InsertOne(context.Background(), truancy)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   return c.JSON(bson.M{
     "_id": insertedResult.InsertedID,
@@ -225,7 +231,7 @@ func motivateTruancy(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
 
-  // gettint the truancy and updating it
+  // getting the truancy and updating it
   var truancy models.Truancy
   db.Truancies.FindOneAndUpdate(context.Background(), bson.M{"truancyID": body["truancyID"]}, bson.D{
     {Key: "$set", Value: bson.D{{Key: "motivated", Value: true}}},
@@ -242,8 +248,7 @@ func createAverageMark(c *fiber.Ctx) error {
   json.Unmarshal(c.Body(), &body)
   subjectID := body["subjectID"]
   studentID := body["studentID"]
-  term := body["term"]
-  termInt, _ := strconv.Atoi(term)
+  term, _ := strconv.Atoi(body["term"])
 
   var subjectList []models.Subject
   utils.GetLocals(c.Locals("subjectList"), &subjectList)
@@ -266,22 +271,35 @@ func createAverageMark(c *fiber.Ctx) error {
     db.AverageMarks.FindOne(context.Background(), bson.M{"averageMarkID": averageMarkID}).Decode(&averageMarkGenID)
   } 
 
+  // getting normal marks
   marks, err := db.GetMarks(bson.M{
     "subject.subjectID": subjectID,
     "studentID": studentID,
-    "term": termInt,
+    "term": term,
   }, db.EmptySort)
-  utils.CheckError(c, err)
-
-  markValuesCounter := 0
-  marksCounter := 0
-  for _, mark := range marks {
-    markValuesCounter += mark.Value
-    marksCounter += 1
+  if err != nil {
+    utils.Error(c, err)
   }
 
-  // it rounds to the closest integer - cause that's how it works in real life
-  value :=  int(math.Round(float64(markValuesCounter) / float64(marksCounter)))
+  // marksValues
+  var marksValues []int
+  for _, mark := range marks {
+    marksValues = append(marksValues, mark.Value)
+  }
+
+  // getting final mark
+  var finalMark models.FinalMark
+  err = db.FinalMarks.FindOne(context.Background(), bson.M{
+    "subject.subjectID": subjectID,
+    "studentID": studentID,
+    "term": term,
+  }).Decode(&finalMark)
+  if err != nil {
+    utils.Error(c, err)
+  }
+  finalMarkValue := finalMark.Value
+
+  value := utils.CalculateAverageMark(marksValues, finalMarkValue)
 
   averageMark := models.AverageMark{
     AverageMarkID: averageMarkID,
@@ -292,11 +310,13 @@ func createAverageMark(c *fiber.Ctx) error {
     },
     StudentID: studentID,
     Grade: currSubject.Grade,
-    Term: termInt,
+    Term: term,
   }
 
   insertedResult, err := db.AverageMarks.InsertOne(context.Background(), averageMark)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   return c.JSON(bson.M{
     "_id": insertedResult.InsertedID,
@@ -308,6 +328,110 @@ func createAverageMark(c *fiber.Ctx) error {
     },
     "studentID": studentID,
     "grade": currSubject.Grade,
-    "term": termInt,
+    "term": term,
+  })
+}
+
+// @desc    Create finalMarks
+// @route   POST /api/teacher/final
+// @access  Private
+func createFinalMark(c *fiber.Ctx) error {
+  var body map[string]string
+  json.Unmarshal(c.Body(), &body)
+
+  value := body["value"]
+  subjectID := body["subjectID"]
+  studentID := body["studentID"]
+  term,_ := strconv.Atoi(body["term"]) 
+
+  // getting and checking if there are averageMarks
+  averageMarkTermOne := false
+  averageMarkTermTwo := false
+  var averageMarks []models.AverageMark
+
+  averageMarks, err := db.GetAverageMarks(bson.M{
+    "subject.subjectID": subjectID, 
+    "studentID": studentID,
+  }, db.EmptySort)
+  if err != nil {
+    utils.Error(c, err)
+  }
+
+  // now checking for averageMarks for each term
+  for _, averageMark := range averageMarks {
+    // this is not idiotic:
+    // if I would have written averageMarkTermTwo = averageMarks[averageMark].term === 1
+    // then it would have been resetted to false when it would have hopped to the other average mark
+    if averageMark.Term == 1 {
+      averageMarkTermOne = true
+    } else if averageMark.Term == 2 {
+      averageMarkTermTwo = true
+    }
+  }
+
+  if averageMarkTermOne && averageMarkTermTwo {
+    return utils.MessageError(c, "Media pe ambele semestre a fost încheiată.")
+  } else {
+    if averageMarkTermOne && term == 1 {
+      return utils.MessageError(c, "Media pe primul semestru a fost încheiată.")
+    } else if averageMarkTermTwo && term == 2 {
+      return utils.MessageError(c, "Media pe al doilea semestru a fost încheiată.")
+    }
+  }
+
+  var subjectList []models.Subject
+  utils.GetLocals(c.Locals("subjectList"), &subjectList)
+
+  // getting the currSubject
+  var currSubject models.Subject
+  for _, subject := range subjectList {
+    if subject.SubjectID == subjectID {
+      currSubject = subject
+    }
+  }
+
+  // generating id
+  var finalMarkID = utils.GenID()
+  finalMarkID = utils.GenID()
+  var finalMarkGenID models.FinalMark
+  db.FinalMarks.FindOne(context.Background(), bson.M{"finalMarkID": finalMarkID}).Decode(&finalMarkGenID)
+  for (finalMarkGenID != models.FinalMark{Subject: models.ShortSubject{}, Grade: models.Grade{}}) {
+    finalMarkID = utils.GenID()
+    db.FinalMarks.FindOne(context.Background(), bson.M{"finalMarkID": finalMarkID}).Decode(&finalMarkGenID)
+  } 
+
+  // some prep variables for the finalMark struct
+  valueInt, _ := strconv.Atoi(value) 
+
+  // filling in all the values to a finalMark struct
+  finalMark := models.FinalMark{
+    FinalMarkID: finalMarkID,
+    Value: valueInt,
+    Subject: models.ShortSubject {
+      SubjectID: subjectID,
+      Name: currSubject.Name,
+    },
+    StudentID: studentID,
+    Grade: currSubject.Grade,
+    Term: term, 
+  }
+
+  // inserting the finalMark
+  insertedResult, err := db.FinalMarks.InsertOne(context.Background(), finalMark)
+  if err != nil {
+    utils.Error(c, err)
+  }
+
+  return c.JSON(bson.M{
+    "_id": insertedResult.InsertedID,
+    "finalMarkID": finalMarkID,
+    "value": valueInt,
+    "subject": bson.M {
+      "subjectID": subjectID,
+      "name": currSubject.Name,
+    },
+    "studentID": studentID,
+    "grade": currSubject.Grade,
+    "term": term, 
   })
 }

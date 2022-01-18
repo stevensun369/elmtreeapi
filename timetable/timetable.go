@@ -14,7 +14,9 @@ func getByGradeID(c *fiber.Ctx) error {
   periods, err := db.GetPeriods(bson.M{
     "grade.gradeID": gradeID,
   }, db.PeriodSort)
-  utils.CheckError(c, err)
+  if err != nil {
+utils.Error(c, err)
+}
 
   return c.JSON(periods)
 }
@@ -25,7 +27,9 @@ func getByTeacherID(c *fiber.Ctx) error {
   periods, err := db.GetPeriods(bson.M{
     "teacherID": teacherID,
   }, db.PeriodSort)
-  utils.CheckError(c, err)
+  if err != nil {
+utils.Error(c, err)
+}
 
   return c.JSON(periods)
 }

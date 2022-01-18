@@ -4,6 +4,7 @@ import (
 	"backend-go/db"
 	"backend-go/models"
 	"backend-go/utils"
+	"context"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,7 +25,9 @@ func getMarks(c *fiber.Ctx) error {
     "subject.subjectID": subjectID,
     "studentID": studentID,
   }, db.DateSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  } 
   
   if len(marks) == 0 {
     marks = []models.Mark {}
@@ -49,7 +52,9 @@ func getTruancies(c *fiber.Ctx) error {
     "subject.subjectID": subjectID,
     "studentID": studentID,
   }, db.DateSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(truancies) == 0 {
     truancies = []models.Truancy {}
@@ -69,7 +74,9 @@ func getAverageMarks(c *fiber.Ctx) error {
   averageMarks, err := db.GetAverageMarks(bson.M{
     "studentID": studentID,
   }, db.TermSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(averageMarks) == 0 {
     averageMarks = []models.AverageMark {}
@@ -89,7 +96,9 @@ func getTermMarks(c *fiber.Ctx) error {
   termMarks, err := db.GetTermMarks(bson.M{
     "studentID": studentID,
   }, db.EmptySort) 
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(termMarks) == 0 {
     termMarks = []models.TermMark {}
@@ -98,19 +107,91 @@ func getTermMarks(c *fiber.Ctx) error {
   return c.JSON(termMarks)
 }
 
+// @desc    Get final marks by subjectID
+// @route   GET /api/student/final/:subjectID
+// @access  Private
+func getFinalMarks(c *fiber.Ctx) error {
+  subjectID := c.Params("subjectID")
+  
+  // getting studentID from locals
+  var studentID string
+  utils.GetLocals(c.Locals("studentID"), &studentID)
+  
+  finalMarks, err := db.GetFinalMarks(bson.M{
+    "subject.subjectID": subjectID,
+    "studentID": studentID,
+  }, db.EmptySort)
+  if err != nil {
+    utils.Error(c, err)
+  }
+  
+  if len(finalMarks) == 0 {
+    finalMarks = []models.FinalMark {}
+  }
+  
+  return c.JSON(finalMarks)
+}
+
 // @desc   Get timetable
 // @route  GET /api/student/timetable
 // @access Private
 func getPeriods(c *fiber.Ctx) error {
-  var grade models.Grade
-  utils.GetLocals(c.Locals("grade"), &grade)
+  var subjectList []models.ShortSubject
+  utils.GetLocals(c.Locals("subjectList"), &subjectList)
 
-  gradeID := grade.GradeID
+  var subjectIDList []string
+  for _, subject := range subjectList {
+    subjectIDList = append(subjectIDList, subject.SubjectID)
+  }
 
   periods, err := db.GetPeriods(bson.M{
-    "grade.gradeID": gradeID,
+    "subject.subjectID": bson.M{"$in": subjectIDList},
   }, db.PeriodSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   return c.JSON(periods)
 }
+
+// @desc   Get timetable
+// @route  GET /api/student/timetable/teachers
+// @access Private
+func getPeriodsTeachers(c *fiber.Ctx) error {
+  var subjectList []models.ShortSubject
+  utils.GetLocals(c.Locals("subjectList"), &subjectList)
+  
+
+  var subjectIDList []string
+  for _, subject := range subjectList {
+    subjectIDList = append(subjectIDList, subject.SubjectID)
+  }
+
+  teachers, err := db.GetTeachers(bson.M{
+    "subjectList.subjectID": bson.M{"$in" : subjectIDList},
+  }, db.EmptySort)
+  if err != nil {
+    return utils.Error(c, err)
+  }
+
+  return c.JSON(teachers)
+}
+
+// @desc   Get timetable
+// @route  GET /api/student/timetable
+// @access Private
+func getSchool(c *fiber.Ctx) error {
+  var grade models.Grade
+  utils.GetLocals(c.Locals("grade"), &grade)
+  
+  var school models.School
+  err := db.Schools.FindOne(context.Background(), bson.M{
+    "schoolID": grade.SchoolID,
+  }).Decode(&school)
+  if err != nil {
+    utils.Error(c, err)
+  }
+
+  return c.JSON(school)
+}
+

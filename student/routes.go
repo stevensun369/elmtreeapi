@@ -23,6 +23,16 @@ func Routes(app *fiber.App) {
   // get term marks
   group.Get("/term", studentMiddleware, getTermMarks)
 
+  // get finalMarks
+  group.Get("/final/:subjectID", studentMiddleware, getFinalMarks)
+
   // get timetable data
   group.Get("/timetable", studentMiddleware, getPeriods)
+
+  // get timetable teachers
+  group.Get("/timetable/teachers", studentMiddleware, getPeriodsTeachers)
+  
+  // get school data
+  group.Get("/school", studentMiddleware, getSchool)
+
 }

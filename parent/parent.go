@@ -11,6 +11,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// @desc   Add student to student list
+// @route  PUT /api/parent/students
+// @access Private
 func parentAddStudent(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
@@ -42,10 +45,14 @@ func parentAddStudent(c *fiber.Ctx) error {
   students, err := db.GetStudents(bson.M{
     "studentID": bson.M{"$in": newStudentIDList},
   }, db.GradeSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   tokenString, err := utils.ParentGenerateToken(parent.ParentID, parent.StudentIDList)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(students) == 0 {
     students = []models.Student {}
@@ -57,15 +64,4 @@ func parentAddStudent(c *fiber.Ctx) error {
       "token": tokenString,
     },
   )
-}
-
-func getPeriods(c *fiber.Ctx) error {
-  gradeID := c.Params("gradeID")
-
-  periods, err := db.GetPeriods(bson.M{
-    "grade.gradeID": gradeID,
-  }, db.PeriodSort)
-  utils.CheckError(c, err)
-
-  return c.JSON(periods)
 }

@@ -115,7 +115,7 @@ func GetTermMarks(filter interface{}, optionsData interface{}) ([]models.TermMar
 	}
 	err = cursor.All(context.Background(), &termMarks)
 	return termMarks, err
-}
+} 
 
 // periods
 func GetPeriods(filter interface{}, optionsData interface{}) ([]models.Period, error) {
@@ -145,4 +145,65 @@ func GetStudents(filter interface{}, optionsData interface{}) ([]models.Student,
 	}
 	err = cursor.All(context.Background(), &students)
 	return students, err
+}
+
+
+// teachers
+func GetTeachers(filter interface{}, optionsData interface{}) ([]models.Teacher, error) {
+	var teachers []models.Teacher
+
+	options := options.Find()
+	options.SetSort(optionsData)
+
+	cursor, err := Teachers.Find(context.Background(), filter, options)
+	if err != nil {
+		return nil, err
+	}
+	err = cursor.All(context.Background(), &teachers)
+	return teachers, err
+}
+
+// grades
+func GetGrades(filter interface{}, optionsData interface{}) ([]models.Grade, error) {
+	var grades []models.Grade
+
+	options := options.Find()
+	options.SetSort(optionsData)
+
+	cursor, err := Grades.Find(context.Background(), filter, options)
+	if err != nil {
+		return nil, err
+	}
+	err = cursor.All(context.Background(), &grades)
+	return grades, err
+}
+
+// subjects
+func GetSubjects(filter interface{}, optionsData interface{}) ([]models.Subject, error) {
+	var subjects []models.Subject
+
+	options := options.Find()
+	options.SetSort(optionsData)
+
+	cursor, err := Subjects.Find(context.Background(), filter, options)
+	if err != nil {
+		return nil, err
+	}
+	err = cursor.All(context.Background(), &subjects)
+	return subjects, err
+}
+
+// final marks
+func GetFinalMarks(filter interface{}, optionsData interface{}) ([]models.FinalMark, error) {
+	var finalMarks []models.FinalMark
+
+	options := options.Find()
+	options.SetSort(optionsData)
+
+	cursor, err := FinalMarks.Find(context.Background(), filter, options)
+	if err != nil {
+		return nil, err
+	}
+	err = cursor.All(context.Background(), &finalMarks)
+	return finalMarks, err
 }

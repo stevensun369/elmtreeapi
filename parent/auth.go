@@ -36,7 +36,9 @@ func parentMiddleware(c *fiber.Ctx) error {
       return utils.JWTKey, nil
     })
 
-    utils.CheckError(c, err)
+    if err != nil {
+      utils.Error(c, err)
+    }
 
     if !tkn.Valid {
       utils.MessageError(c, "token not valid")
@@ -102,7 +104,7 @@ func parentRegister(c *fiber.Ctx) error {
   // generate token
   tokenString, err := utils.ParentGenerateToken(parent.ParentID, []string {})
   if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
+    return utils.Error(c, err)
   }
 
   return c.JSON(bson.M{
@@ -127,9 +129,7 @@ func parentLogin(c *fiber.Ctx) error {
   // getting the parent
   var parent models.Parent
   if err := db.Parents.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&parent); err != nil {
-    return c.Status(401).JSON(bson.M{
-      "message": "Nu există niciun părinte cu CNP-ul introdus.",
-    })  
+    return utils.MessageError(c, "Nu există niciun părinte cu CNP-ul introdus.")  
   }
   hashedPassword := parent.Password
 
@@ -137,7 +137,9 @@ func parentLogin(c *fiber.Ctx) error {
   students, err := db.GetStudents(bson.M{
     "studentID": bson.M{"$in": parent.StudentIDList},
   }, db.GradeSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(students) == 0 {
     students = []models.Student {}
@@ -147,8 +149,7 @@ func parentLogin(c *fiber.Ctx) error {
 
   tokenString, err := utils.ParentGenerateToken(parent.ParentID, parent.StudentIDList)
   if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
-  }
+    return utils.Error(c, err)  }
 
   if compareErr == nil {
     return c.JSON(bson.M{

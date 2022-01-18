@@ -25,7 +25,9 @@ func getMarks(c *fiber.Ctx) error {
     "subject.subjectID": subjectID,
    "studentID": studentID,
   }, db.DateSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(marks) == 0 {
     marks = []models.Mark {}
@@ -45,7 +47,9 @@ func getTruancies(c *fiber.Ctx) error {
     "subject.subjectID": subjectID,
    "studentID": studentID,
   }, db.DateSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(truancies) == 0 {
     truancies = []models.Truancy {}
@@ -55,7 +59,7 @@ func getTruancies(c *fiber.Ctx) error {
 }
 
 // @desc    Get Average Mark
-// @route   POST /api/teacher/average/:subjectID/:studentID
+// @route   GET /api/teacher/average/:subjectID/:studentID
 // @access  Private
 func getAverageMarks(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")
@@ -65,7 +69,9 @@ func getAverageMarks(c *fiber.Ctx) error {
     "subject.subjectID": subjectID,
     "studentID": studentID,
   }, db.TermSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  }
 
   if len(averageMarks) == 0 {
     averageMarks = []models.AverageMark {}
@@ -75,7 +81,7 @@ func getAverageMarks(c *fiber.Ctx) error {
 }
 
 // @desc    Get Average Marks by subjectID for multiple students
-// @route   POST /api/teacher/average/:subjectID
+// @route   GET /api/teacher/average/:subjectID
 // @access  Private
 func getAverageMarksSubject(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")
@@ -83,11 +89,35 @@ func getAverageMarksSubject(c *fiber.Ctx) error {
   averageMarks, err := db.GetAverageMarks(bson.M{
     "subject.subjectID": subjectID,
   }, db.TermSort)
-  utils.CheckError(c, err)
+  if err != nil {
+    utils.Error(c, err)
+  } 
 
   if len(averageMarks) == 0 {
     averageMarks = []models.AverageMark {}
   }
 
   return c.JSON(averageMarks)
+}
+
+// @desc    Get final marks by subjectID for one studet
+// @route   GET /api/teacher/final/:subjectID/:studentID
+// @access  Private
+func getFinalMarks(c *fiber.Ctx) error {
+  subjectID := c.Params("subjectID")
+  studentID := c.Params("studentID")
+
+  finalMarks, err := db.GetFinalMarks(bson.M{
+    "subject.subjectID": subjectID,
+    "studentID": studentID,
+  }, db.EmptySort)
+  if err != nil {
+    utils.Error(c, err)
+  }
+
+  if len(finalMarks) == 0 {
+    finalMarks = []models.FinalMark {}
+  }
+
+  return c.JSON(finalMarks)
 }

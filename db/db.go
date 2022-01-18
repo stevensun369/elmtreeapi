@@ -18,6 +18,7 @@ var Client *mongo.Client
 
 // collections
 var AverageMarks *mongo.Collection
+var FinalMarks *mongo.Collection
 var Grades *mongo.Collection
 var Marks *mongo.Collection
 var Parents *mongo.Collection
@@ -63,6 +64,7 @@ func InitDatabase() {
 
   // setting up collections
   AverageMarks = getCollection("averagemarks")
+  FinalMarks = getCollection("finalmarks")
   Grades = getCollection("grades")
   Marks = getCollection("marks")
   Parents = getCollection("parents")

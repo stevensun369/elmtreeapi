@@ -12,6 +12,9 @@ func Routes(app *fiber.App) {
   
   // get timetable
   group.Get("/timetable", teacherMiddleware, getPeriods)
+
+  // get school
+  group.Get("/school", teacherMiddleware, getSchool)
   
   // get homeroom students
   group.Get("/homeroom", teacherMiddleware, getHomeroomStudents)
@@ -48,6 +51,12 @@ func Routes(app *fiber.App) {
   // motivate truancy
   group.Put("/truancy/motivate", teacherMiddleware, motivateTruancy)
 
+  // create finalMark
+  group.Post("/final", teacherMiddleware, createFinalMark)
+  
+  // get final marks
+  group.Get("/final/:subjectID/:studentID", teacherMiddleware, getFinalMarks)
+
   // create averageMark
   group.Post("/average", teacherMiddleware, createAverageMark)
 
@@ -56,6 +65,4 @@ func Routes(app *fiber.App) {
 
   // get average marks for multiple students
   group.Get("/average/:subjectID", teacherMiddleware, getAverageMarksSubject)
-
-
 }
