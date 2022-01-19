@@ -15,7 +15,6 @@ import (
 	// std
 	"context"
 	"encoding/json"
-	"fmt"
 
 	// mongodb
 	"go.mongodb.org/mongo-driver/bson"
@@ -32,24 +31,24 @@ func parentMiddleware(c *fiber.Ctx) error {
 
     // we're just parsing the token: maybe I will put it in the utils
     claims := &utils.ParentClaims{}
-    tkn, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface {}, error) {
+    _, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface {}, error) {
       return utils.JWTKey, nil
     })
 
     if err != nil {
-      utils.Error(c, err)
+      return utils.Error(c, err)
     }
 
-    if !tkn.Valid {
-      utils.MessageError(c, "token not valid")
-    }
+    // if !tkn.Valid {
+    //   return utils.MessageError(c, "token not valid")
+    // }
 
     utils.SetLocals(c, "parentID", claims.ParentID)
     utils.SetLocals(c, "studentIDList", claims.StudentIDList)
   }
 
   if (token == "") {
-    utils.MessageError(c, "no token provided")
+    return utils.MessageError(c, "no token provided")
   }
 
   return c.Next()
@@ -76,15 +75,13 @@ func parentRegister(c *fiber.Ctx) error {
   var checkParent models.Parent
   db.Parents.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&checkParent)
   if (checkParent.ParentID != "") {
-    return c.Status(401).JSON(bson.M{
-      "message": "Există deja un părinte cu CNP-ul introdus.",
-    })  
+    return utils.MessageError(c, "Există deja un părinte cu CNP-ul introdus.")
   }
 
   // hashed password
   hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body["password"]), 10)
   if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
+    return utils.Error(c, err)
   }
 
   parent := models.Parent {
@@ -98,7 +95,7 @@ func parentRegister(c *fiber.Ctx) error {
 
   insertedResult, err := db.Parents.InsertOne(context.Background(), parent)
   if err != nil {
-    return c.Status(500).SendString(fmt.Sprintf("%v", err))
+    return utils.Error(c, err)
   }
 
   // generate token
@@ -138,7 +135,7 @@ func parentLogin(c *fiber.Ctx) error {
     "studentID": bson.M{"$in": parent.StudentIDList},
   }, db.GradeSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(students) == 0 {
@@ -149,7 +146,8 @@ func parentLogin(c *fiber.Ctx) error {
 
   tokenString, err := utils.ParentGenerateToken(parent.ParentID, parent.StudentIDList)
   if err != nil {
-    return utils.Error(c, err)  }
+    return utils.Error(c, err)  
+  }
 
   if compareErr == nil {
     return c.JSON(bson.M{

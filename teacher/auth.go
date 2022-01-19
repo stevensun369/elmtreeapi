@@ -34,7 +34,7 @@ func teacherMiddleware(c *fiber.Ctx) error {
 
     // we're just parsing the token: maybe I will put it in the utils
     claims := &utils.TeacherClaims{}
-    tkn, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface {}, error) {
+    _, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface {}, error) {
       return utils.JWTKey, nil
     })
 
@@ -42,9 +42,9 @@ func teacherMiddleware(c *fiber.Ctx) error {
       utils.Error(c, err)
     }
 
-    if !tkn.Valid {
-      utils.MessageError(c, "token not valid")
-    }
+    // if !tkn.Valid {
+    //   utils.MessageError(c, "token not valid")
+    // }
 
     utils.SetLocals(c, "teacherID", claims.TeacherID)
     utils.SetLocals(c, "homeroomGrade", claims.HomeroomGrade)
@@ -70,7 +70,9 @@ func postLogin(c *fiber.Ctx) error {
   json.Unmarshal(c.Body(), &body)
 
   teacher, err := db.GetTeacherByCNP(body["cnp"])
-  utils.CheckMessageError(c, err, "Nu există niciun profesor cu CNP-ul introdus.")
+  if err != nil {
+    utils.MessageError(c, "Nu există niciun profesor cu CNP-ul introdus.")
+  }
 
   // if the teacher doesn't have a password
   if teacher.Password == "" {

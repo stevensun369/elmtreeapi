@@ -26,7 +26,7 @@ func getMarks(c *fiber.Ctx) error {
    "studentID": studentID,
   }, db.DateSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(marks) == 0 {
@@ -48,7 +48,7 @@ func getTruancies(c *fiber.Ctx) error {
    "studentID": studentID,
   }, db.DateSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(truancies) == 0 {
@@ -70,7 +70,7 @@ func getAverageMarks(c *fiber.Ctx) error {
     "studentID": studentID,
   }, db.TermSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(averageMarks) == 0 {
@@ -90,7 +90,7 @@ func getAverageMarksSubject(c *fiber.Ctx) error {
     "subject.subjectID": subjectID,
   }, db.TermSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   } 
 
   if len(averageMarks) == 0 {
@@ -112,7 +112,7 @@ func getFinalMarks(c *fiber.Ctx) error {
     "studentID": studentID,
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(finalMarks) == 0 {

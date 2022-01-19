@@ -28,12 +28,12 @@ func update(c *fiber.Ctx) error {
 
   teacher, err := db.GetTeacherByID(teacherID)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   tokenString, err := utils.TeacherGenerateToken(teacher.TeacherID, teacher.HomeroomGrade, teacher.SubjectList, teacher.SchoolID)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   } 
 
   return c.JSON(bson.M{
@@ -59,7 +59,7 @@ func getStudents(c *fiber.Ctx) error {
     "subjectList.subjectID":  bson.M{"$in": subjectIDList},
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(students) == 0 {
@@ -105,7 +105,7 @@ func getPeriods(c *fiber.Ctx) error {
     "subject.subjectID": bson.M{"$in": subjectIDList},
   }, db.PeriodSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(periods)
@@ -123,7 +123,7 @@ func getSchool(c *fiber.Ctx) error {
     "schoolID": schoolID,
   }).Decode(&school)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
   
   return c.JSON(school)

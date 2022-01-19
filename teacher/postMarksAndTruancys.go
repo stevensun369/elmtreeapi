@@ -48,7 +48,7 @@ func createMark(c *fiber.Ctx) error {
     "studentID": studentID,
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   // now checking for averageMarks for each term
@@ -120,7 +120,7 @@ func createMark(c *fiber.Ctx) error {
   // inserting the mark
   insertedResult, err := db.Marks.InsertOne(context.Background(), mark)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(bson.M{
@@ -205,7 +205,7 @@ func createTruancy(c *fiber.Ctx) error {
   // inserting the truancy
   insertedResult, err := db.Truancies.InsertOne(context.Background(), truancy)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(bson.M{
@@ -278,7 +278,7 @@ func createAverageMark(c *fiber.Ctx) error {
     "term": term,
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   // marksValues
@@ -295,7 +295,7 @@ func createAverageMark(c *fiber.Ctx) error {
     "term": term,
   }).Decode(&finalMark)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
   finalMarkValue := finalMark.Value
 
@@ -315,7 +315,7 @@ func createAverageMark(c *fiber.Ctx) error {
 
   insertedResult, err := db.AverageMarks.InsertOne(context.Background(), averageMark)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(bson.M{
@@ -354,7 +354,7 @@ func createFinalMark(c *fiber.Ctx) error {
     "studentID": studentID,
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   // now checking for averageMarks for each term
@@ -419,7 +419,7 @@ func createFinalMark(c *fiber.Ctx) error {
   // inserting the finalMark
   insertedResult, err := db.FinalMarks.InsertOne(context.Background(), finalMark)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(bson.M{

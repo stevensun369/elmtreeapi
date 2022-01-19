@@ -32,7 +32,7 @@ func getHomeroomStudents(c *fiber.Ctx) error {
     "grade.gradeID": homeroomGrade.GradeID,
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
   
   if len(students) == 0 {
@@ -50,7 +50,7 @@ func getHomeroomStudentSubjects(c *fiber.Ctx) error {
 
   student, err := db.GetStudentByID(studentID)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(student.SubjectList)
@@ -69,7 +69,7 @@ func getHomeroomAverageMarks(c *fiber.Ctx) error {
     "grade.gradeID": homeroomGrade.GradeID,
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(averageMarks) == 0 {
@@ -93,7 +93,7 @@ func getHomeroomTermMarks(c *fiber.Ctx) error {
     "grade.gradeID": homeroomGrade.GradeID,
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(termMarks) == 0 {
@@ -128,7 +128,7 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
   // get student and his subjectList
   student, err := db.GetStudentByID(studentID)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   averageMarks, err := db.GetAverageMarks(bson.M{
@@ -136,7 +136,7 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
     "term": termInt,
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(averageMarks) != len(student.SubjectList) {
@@ -171,7 +171,7 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
 
   insertedResult, err := db.TermMarks.InsertOne(context.Background(), termMark)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(bson.M{

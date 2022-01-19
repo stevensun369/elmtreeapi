@@ -17,12 +17,12 @@ func update(c *fiber.Ctx) error {
 
   student, err := db.GetStudentByID(studentID)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
   
   tokenString, err := utils.StudentGenerateToken(student.StudentID, student.Grade, student.SubjectList)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(bson.M{

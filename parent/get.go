@@ -25,12 +25,12 @@ func getStudents(c *fiber.Ctx) error {
   }, db.GradeSort)
 
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   tokenString, err := utils.ParentGenerateToken(parentID, studentIDList)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(students) == 0 {
@@ -58,7 +58,7 @@ func getMarks(c *fiber.Ctx) error {
   }, db.DateSort)
 
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(marks) == 0 {
@@ -80,7 +80,7 @@ func getTruancies(c *fiber.Ctx) error {
     "subject.subjectID": subjectID,
   }, db.DateSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(truancies) == 0 {
@@ -101,7 +101,7 @@ func getAverageMarks(c *fiber.Ctx) error {
     "studentID": bson.M{"$in": studentIDList},
   }, db.TermSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(averageMarks) == 0 {
@@ -122,7 +122,7 @@ func getTermMarks(c *fiber.Ctx) error {
     "studentID": bson.M{"$in": studentIDList},
   }, db.TermSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
   
   if len(termMarks) == 0 {
@@ -144,7 +144,7 @@ func getFinalMarks(c *fiber.Ctx) error {
     "studentID": studentID,
   }, db.EmptySort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(finalMarks) == 0 {
@@ -172,7 +172,7 @@ func getPeriods(c *fiber.Ctx) error {
     "subject.subjectID": bson.M{"$in": subjectIDList},
   }, db.PeriodSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(periods)
@@ -186,7 +186,7 @@ func getPeriodsTeachers(c *fiber.Ctx) error {
 
   student, err := db.GetStudentByID(studentID)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   subjectList := student.SubjectList
@@ -213,7 +213,7 @@ func getSchool(c *fiber.Ctx) error {
 
   student, err := db.GetStudentByID(studentID)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
   
   var school models.School
@@ -221,7 +221,7 @@ func getSchool(c *fiber.Ctx) error {
     "schoolID": student.Grade.SchoolID,
   }).Decode(&school)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   return c.JSON(school)

@@ -34,7 +34,7 @@ func studentMiddleware(c *fiber.Ctx) error {
 
     // we're just parsing the token: maybe I will put it in the utils
     claims := &utils.StudentClaims{}
-    tkn, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface {}, error) {
+    _, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface {}, error) {
       return utils.JWTKey, nil
     })
 
@@ -42,9 +42,9 @@ func studentMiddleware(c *fiber.Ctx) error {
       utils.Error(c, err)
     }
 
-    if !tkn.Valid {
-      return c.Status(500).SendString("token not valid")
-    }
+    // if !tkn.Valid {
+    //   return c.Status(500).SendString("token not valid")
+    // }
 
     utils.SetLocals(c, "studentID", claims.StudentID)
     utils.SetLocals(c, "grade", claims.Grade)
@@ -69,14 +69,16 @@ func postLogin(c *fiber.Ctx) error {
 
   // getting student by cnp
   student, err := db.GetStudentByCNP(body["cnp"])
-  utils.CheckMessageError(c, err, "Nu există niciun elev cu CNP-ul introdus.")
+  if err != nil {
+    return utils.MessageError(c, "Nu există niciun elev cu CNP-ul introdus.")
+  }
 
   // if the student doesn't have a password
   if student.Password == "" {
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body["password"]), 10)
 
     if err != nil {
-      utils.Error(c, err)
+      return utils.Error(c, err)
     }
 
     var modifiedStudent models.Student
@@ -87,7 +89,7 @@ func postLogin(c *fiber.Ctx) error {
     // jwt
     tokenString, err := utils.StudentGenerateToken(modifiedStudent.StudentID, modifiedStudent.Grade, modifiedStudent.SubjectList)
     if err != nil {
-      utils.Error(c, err)
+      return utils.Error(c, err)
     }
 
     return c.JSON(bson.M{
@@ -108,7 +110,7 @@ func postLogin(c *fiber.Ctx) error {
 
     tokenString, err := utils.StudentGenerateToken(student.StudentID, student.Grade, student.SubjectList)
     if err != nil {
-      utils.Error(c, err)
+      return utils.Error(c, err)
     }
 
     if compareErr == nil {

@@ -24,7 +24,7 @@ func parentAddStudent(c *fiber.Ctx) error {
   // get student and make sure it is there
   student, _ := db.GetStudentByIDAndCNP(body["studentCNP"], body["studentID"])
   if (student.StudentID == "") {
-    utils.MessageError(c, "Nu există niciun elev cu datele introduse.")
+    return utils.MessageError(c, "Nu există niciun elev cu datele introduse.")
   }
 
   // new studentIDList
@@ -38,7 +38,7 @@ func parentAddStudent(c *fiber.Ctx) error {
     bson.M{"parentID": parentID}, 
     bson.M{"$set": bson.M{"studentIDList": newStudentIDList}},
     ).Decode(&parent); err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
   parent.StudentIDList = append(parent.StudentIDList, body["studentID"])
 
@@ -46,12 +46,12 @@ func parentAddStudent(c *fiber.Ctx) error {
     "studentID": bson.M{"$in": newStudentIDList},
   }, db.GradeSort)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   tokenString, err := utils.ParentGenerateToken(parent.ParentID, parent.StudentIDList)
   if err != nil {
-    utils.Error(c, err)
+    return utils.Error(c, err)
   }
 
   if len(students) == 0 {
