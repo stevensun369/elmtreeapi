@@ -43,9 +43,9 @@ func getHomeroomStudents(c *fiber.Ctx) error {
 }
 
 // @desc   Get subjects of a homeroom student
-// @route  GET /api/teacher/homeroom/:studentID
+// @route  GET /api/teacher/homeroom/subjects/:studentID
 // @access Private
-func getHomeroomStudentSubjects(c *fiber.Ctx) error {
+func getHomeroomSubjects(c *fiber.Ctx) error {
   studentID := c.Params("studentID")
 
   student, err := db.GetStudentByID(studentID)
@@ -57,7 +57,7 @@ func getHomeroomStudentSubjects(c *fiber.Ctx) error {
 }
 
 // @desc   Get average marks for the students in the homeroom grade
-// @route  GET /api/teacher/homeroom/average
+// @route  GET /api/teacher/homeroom/averagemarks
 // @access Private
 func getHomeroomAverageMarks(c *fiber.Ctx) error {
 
@@ -81,7 +81,7 @@ func getHomeroomAverageMarks(c *fiber.Ctx) error {
 
 
 // @desc   Get term marks fro homeroom students
-// @route  GET /api/teacher/homeroom/term
+// @route  GET /api/teacher/homeroom/termmarks
 // @access Private
 func getHomeroomTermMarks(c *fiber.Ctx) error {
 
@@ -104,7 +104,7 @@ func getHomeroomTermMarks(c *fiber.Ctx) error {
 }
   
 // @desc   Create term mark for the students at term
-// @route  POST /api/teacher/homeroom/term
+// @route  POST /api/teacher/homeroom/termmarks
 // @access Private
 func createHomeroomTermMark(c *fiber.Ctx) error {
   // getting studentID and term from body
@@ -182,5 +182,45 @@ func createHomeroomTermMark(c *fiber.Ctx) error {
     "grade": student.Grade,
     "term": termInt,
   })
+}
+
+// @desc   Get timetable
+// @route  GET /api/teacher/homeroom/timetable
+// @access Private
+func getHomeroomPeriods(c *fiber.Ctx) error {
+  // getting the homeroom grade
+  var homeroomGrade models.Grade
+  utils.GetLocals(c.Locals("homeroomGrade"), &homeroomGrade)
+
+  gradeID := homeroomGrade.GradeID
+
+  periods, err := db.GetPeriods(bson.M{
+    "grade.gradeID": gradeID,
+  }, db.PeriodSort)
+  if err != nil {
+    return utils.Error(c, err)
+  }
+
+  return c.JSON(periods)
+}
+
+// @desc   Get timetable
+// @route  GET /api/teacher/homeroom/timetable/teachers
+// @access Private
+func getHomeroomPeriodsTeachers(c *fiber.Ctx) error {
+  // getting the homeroom grade
+  var homeroomGrade models.Grade
+  utils.GetLocals(c.Locals("homeroomGrade"), &homeroomGrade)
+
+  gradeID := homeroomGrade.GradeID
+
+  teachers, err := db.GetTeachers(bson.M{
+    "subjectList.grade.gradeID": gradeID,
+  }, db.EmptySort)
+  if err != nil {
+    return utils.Error(c, err)
+  }
+
+  return c.JSON(teachers)
 }
 

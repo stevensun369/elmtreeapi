@@ -57,6 +57,16 @@ func GetTeacherByCNP(cnp string) (models.Teacher, error) {
 	return teacher, err
 }
 
+// parent
+func GetParentByID(parentID string) (models.Parent, error) {
+	// getting a parent
+	var parent models.Parent
+
+  err := Parents.FindOne(context.Background(), bson.M{"parentID": parentID}).Decode(&parent)
+	
+	return parent, err
+}
+
 // marks
 func GetMarks(filter interface{}, optionsData interface{}) ([]models.Mark, error) {
 	var marks []models.Mark

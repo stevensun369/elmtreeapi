@@ -164,3 +164,38 @@ func parentLogin(c *fiber.Ctx) error {
     return utils.MessageError(c, "Nu ați introdus parola validă.") 
   }
 } 
+
+// @desc   Update the parent: students and token
+// @route  GET /api/parent/update
+// @access Private
+func update(c *fiber.Ctx) error {
+  var parentID string
+  utils.GetLocals(c.Locals("parentID"), &parentID)
+
+  var studentIDList []string
+  utils.GetLocals(c.Locals("studentIDList"), &studentIDList)
+
+  students, err := db.GetStudents(bson.M{
+    "studentID": bson.M{"$in": studentIDList},
+  }, db.GradeSort)
+
+  if err != nil {
+    return utils.Error(c, err)
+  }
+
+  tokenString, err := utils.ParentGenerateToken(parentID, studentIDList)
+  if err != nil {
+    return utils.Error(c, err)
+  }
+
+  if len(students) == 0 {
+    students = []models.Student {}
+  }
+
+  return c.JSON(
+    bson.M{
+      "students": students,
+      "token": tokenString,
+    },
+  )
+}

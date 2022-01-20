@@ -16,7 +16,6 @@ import (
 	"backend-go/parent"
 	"backend-go/student"
 	"backend-go/teacher"
-	"backend-go/timetable"
 )
 
 func main() {
@@ -28,10 +27,9 @@ func main() {
 
   db.InitDatabase()
 
-  teacher.Routes(app)
-  student.Routes(app)
-  parent.Routes(app)
-  timetable.Routes(app)
+  teacher.Endpoints(app)
+  student.Endpoints(app)
+  parent.Endpoints(app)
 
   app.Get("/", func (c *fiber.Ctx) error {
     return c.SendString("api is running")

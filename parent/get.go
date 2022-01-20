@@ -4,46 +4,10 @@ import (
 	"backend-go/db"
 	"backend-go/models"
 	"backend-go/utils"
-	"context"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 )
-
-// @desc   Get a list of the parent's students
-// @route  GET /api/parent/students
-// @access Private
-func getStudents(c *fiber.Ctx) error {
-  var parentID string
-  utils.GetLocals(c.Locals("parentID"), &parentID)
-
-  var studentIDList []string
-  utils.GetLocals(c.Locals("studentIDList"), &studentIDList)
-
-  students, err := db.GetStudents(bson.M{
-    "studentID": bson.M{"$in": studentIDList},
-  }, db.GradeSort)
-
-  if err != nil {
-    return utils.Error(c, err)
-  }
-
-  tokenString, err := utils.ParentGenerateToken(parentID, studentIDList)
-  if err != nil {
-    return utils.Error(c, err)
-  }
-
-  if len(students) == 0 {
-    students = []models.Student {}
-  }
-
-  return c.JSON(
-    bson.M{
-      "students": students,
-      "token": tokenString,
-    },
-  )
-}
 
 // @desc   Get marks
 // @route  GET /api/parent/marks/:studentID/:subjectID
@@ -69,7 +33,7 @@ func getMarks(c *fiber.Ctx) error {
 }
 
 // @desc   Get truancies
-// @route  GET /api/parent/truancy/:studentID/:subjectID
+// @route  GET /api/parent/truancies/:studentID/:subjectID
 // @access Private
 func getTruancies(c *fiber.Ctx) error {
   studentID := c.Params("studentID")
@@ -91,7 +55,7 @@ func getTruancies(c *fiber.Ctx) error {
 }
 
 // @desc   Get average marks of all students
-// @route  GET /api/parent/average
+// @route  GET /api/parent/averagemarks
 // @access Private
 func getAverageMarks(c *fiber.Ctx) error {
   var studentIDList []string
@@ -112,7 +76,7 @@ func getAverageMarks(c *fiber.Ctx) error {
 }
 
 // @desc   Get term marks of all students
-// @route  GET /api/parent/term
+// @route  GET /api/parent/termmarks
 // @access Private
 func getTermMarks(c *fiber.Ctx) error {
   var studentIDList []string
@@ -133,7 +97,7 @@ func getTermMarks(c *fiber.Ctx) error {
 }
 
 // @desc    Get final marks by subjectID
-// @route   GET /api/parent/final/:studentID/:subjectID
+// @route   GET /api/parent/finalmarks/:studentID/:subjectID
 // @access  Private
 func getFinalMarks(c *fiber.Ctx) error {
   subjectID := c.Params("subjectID")
@@ -152,77 +116,4 @@ func getFinalMarks(c *fiber.Ctx) error {
   }
 
   return c.JSON(finalMarks)
-}
-
-func getPeriods(c *fiber.Ctx) error {
-  studentID := c.Params("studentID")
-
-  student, err := db.GetStudentByID(studentID)
-  if err != nil {
-    utils.Error(c, err)
-  }
-
-  subjectList := student.SubjectList
-  var subjectIDList []string
-  for _, subject := range subjectList {
-    subjectIDList = append(subjectIDList, subject.SubjectID)
-  }
-
-  periods, err := db.GetPeriods(bson.M{
-    "subject.subjectID": bson.M{"$in": subjectIDList},
-  }, db.PeriodSort)
-  if err != nil {
-    return utils.Error(c, err)
-  }
-
-  return c.JSON(periods)
-}
-
-// @desc   Get timetable
-// @route  GET /api/parent/timetable/:studentID/teachers
-// @access Private
-func getPeriodsTeachers(c *fiber.Ctx) error {
-  studentID := c.Params("studentID")
-
-  student, err := db.GetStudentByID(studentID)
-  if err != nil {
-    return utils.Error(c, err)
-  }
-
-  subjectList := student.SubjectList
-  var subjectIDList []string
-  for _, subject := range subjectList {
-    subjectIDList = append(subjectIDList, subject.SubjectID)
-  }
-
-  teachers, err := db.GetTeachers(bson.M{
-    "subjectList.subjectID": bson.M{"$in" : subjectIDList},
-  }, db.EmptySort)
-  if err != nil {
-    return utils.Error(c, err)
-  }
-
-  return c.JSON(teachers)
-}
-
-// @desc   Get school
-// @route  GET /api/parent/school/:studentID/
-// @access Private
-func getSchool(c *fiber.Ctx) error {
-  studentID := c.Params("studentID")
-
-  student, err := db.GetStudentByID(studentID)
-  if err != nil {
-    return utils.Error(c, err)
-  }
-  
-  var school models.School
-  err = db.Schools.FindOne(context.Background(), bson.M{
-    "schoolID": student.Grade.SchoolID,
-  }).Decode(&school)
-  if err != nil {
-    return utils.Error(c, err)
-  }
-
-  return c.JSON(school)
 }

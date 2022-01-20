@@ -20,7 +20,7 @@ import (
 )
 
 // @desc    Create mark
-// @route   POST /api/teacher/mark
+// @route   POST /api/teacher/marks
 // @access  Private
 func createMark(c *fiber.Ctx) error {
   var body map[string]string
@@ -140,7 +140,7 @@ func createMark(c *fiber.Ctx) error {
 }
 
 // @desc    Create truancy
-// @route   POST /api/teacher/truancy
+// @route   POST /api/teacher/truancies
 // @access  Private
 func createTruancy(c *fiber.Ctx) error {
   var body map[string]string
@@ -225,7 +225,7 @@ func createTruancy(c *fiber.Ctx) error {
 }
 
 // @desc    Motivate truancy
-// @route   PUT /api/teacher/truancy/motivate
+// @route   PUT /api/teacher/truancies/motivate
 // @access  Private
 func motivateTruancy(c *fiber.Ctx) error {
   var body map[string]string
@@ -333,7 +333,7 @@ func createAverageMark(c *fiber.Ctx) error {
 }
 
 // @desc    Create finalMarks
-// @route   POST /api/teacher/final
+// @route   POST /api/teacher/finalmarks
 // @access  Private
 func createFinalMark(c *fiber.Ctx) error {
   var body map[string]string

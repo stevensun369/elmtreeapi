@@ -130,3 +130,27 @@ func postLogin(c *fiber.Ctx) error {
     }
   } 
 }
+
+// @desc   update student
+// @route  GET /api/student/update
+// @access Private
+func update(c *fiber.Ctx) error {
+  var studentID string
+  utils.GetLocals(c.Locals("studentID"), &studentID)
+
+  student, err := db.GetStudentByID(studentID)
+  if err != nil {
+    return utils.Error(c, err)
+  }
+  
+  tokenString, err := utils.StudentGenerateToken(student.StudentID, student.Grade, student.SubjectList)
+  if err != nil {
+    return utils.Error(c, err)
+  }
+
+  return c.JSON(bson.M{
+    "subjectList": student.SubjectList,
+    "grade": student.Grade,
+    "token": tokenString,
+  })
+}

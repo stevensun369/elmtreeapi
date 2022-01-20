@@ -128,3 +128,28 @@ func postLogin(c *fiber.Ctx) error {
     }
   } 
 }
+
+// @desc    Updates teacher subject and homeroom grade
+// @route   GET /api/teacher/update
+// @access  Private
+func update(c *fiber.Ctx) error {
+  // teacherID
+  var teacherID string
+  utils.GetLocals(c.Locals("teacherID"), &teacherID)
+
+  teacher, err := db.GetTeacherByID(teacherID)
+  if err != nil {
+    return utils.Error(c, err)
+  }
+
+  tokenString, err := utils.TeacherGenerateToken(teacher.TeacherID, teacher.HomeroomGrade, teacher.SubjectList, teacher.SchoolID)
+  if err != nil {
+    return utils.Error(c, err)
+  } 
+
+  return c.JSON(bson.M{
+    "subjectList": teacher.SubjectList,
+    "homeroomGrade": teacher.HomeroomGrade,
+    "token": tokenString,
+  })
+}
