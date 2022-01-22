@@ -221,6 +221,15 @@ func getHomeroomPeriodsTeachers(c *fiber.Ctx) error {
     return utils.Error(c, err)
   }
 
-  return c.JSON(teachers)
-}
+  subjects, err := db.GetSubjects(bson.M{
+    "grade.gradeID": gradeID,
+  }, db.EmptySort)
+  if err != nil {
+    return utils.Error(c, err)
+  }
 
+  return c.JSON(bson.M{
+    "teachers": teachers, 
+    "subjects": subjects,
+  })
+}

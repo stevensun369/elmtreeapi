@@ -7,4 +7,5 @@ type Grade struct {
 	YearTo      int    `json:"yearTo,omitempty" bson:"yearTo,omitempty"`
 	GradeNumber int    `json:"gradeNumber,omitempty" bson:"gradeNumber,omitempty"`
 	GradeLetter string `json:"gradeLetter,omitempty" bson:"gradeLetter,omitempty"`
+	Intervals   string `json:"intervals,omitempty" bson:"intervals,omitempty"`
 }
