@@ -22,9 +22,9 @@ func parentAddStudent(c *fiber.Ctx) error {
   utils.GetLocals(c.Locals("parentID"), &parentID)
 
   // get student and make sure it is there
-  student, _ := db.GetStudentByIDAndCNP(body["studentCNP"], body["studentID"])
+  student, _ := db.GetStudentByID(body["studentID"])
   if (student.StudentID == "") {
-    return utils.MessageError(c, "Nu există niciun elev cu datele introduse.")
+    return utils.MessageError(c, "Nu există niciun ID-ul introdus.")
   }
 
   // new studentIDList

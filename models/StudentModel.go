@@ -6,7 +6,6 @@ type Student struct {
 	FirstName   string           `json:"firstName,omitempty" bson:"firstName,omitempty"`
 	DadInitials string           `json:"dadInitials,omitempty" bson:"dadInitials,omitempty"`
 	LastName    string           `json:"lastName,omitempty" bson:"lastName,omitempty"`
-	CNP         string           `json:"cnp,omitempty" bson:"cnp,omitempty"`
 	Password    string           `json:"password" bson:"password"`
 	Grade       Grade            `json:"grade" bson:"grade"`
 	SubjectList []ShortSubject `json:"subjectList" bson:"subjectList"`

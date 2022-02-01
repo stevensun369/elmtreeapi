@@ -67,10 +67,10 @@ func postLogin(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
 
-  // getting student by cnp
-  student, err := db.GetStudentByCNP(body["cnp"])
+  // getting student by studentID
+  student, err := db.GetStudentByID(body["studentID"])
   if err != nil {
-    return utils.MessageError(c, "Nu există niciun elev cu CNP-ul introdus.")
+    return utils.MessageError(c, "Nu există niciun elev cu ID-ul introdus.")
   }
 
   // if the student doesn't have a password
@@ -82,7 +82,7 @@ func postLogin(c *fiber.Ctx) error {
     }
 
     var modifiedStudent models.Student
-    db.Students.FindOneAndUpdate(context.Background(), bson.M{"cnp": body["cnp"]}, bson.D{
+    db.Students.FindOneAndUpdate(context.Background(), bson.M{"studentID": body["studentID"]}, bson.D{
       {Key: "$set", Value: bson.D{{Key: "password",Value: string(hashedPassword)}}},
     }).Decode(&modifiedStudent)
     
@@ -97,7 +97,6 @@ func postLogin(c *fiber.Ctx) error {
       "firstName": modifiedStudent.FirstName,
       "dadInitials": modifiedStudent.DadInitials,
       "lastName": modifiedStudent.LastName,
-      "cnp": modifiedStudent.CNP,
       "password": modifiedStudent.Password,
       "grade": modifiedStudent.Grade,
       "subjectList": modifiedStudent.SubjectList,   
@@ -119,7 +118,6 @@ func postLogin(c *fiber.Ctx) error {
         "firstName": student.FirstName,
         "dadInitials": student.DadInitials,
         "lastName": student.LastName,
-        "cnp": student.CNP,
         "password": student.Password,
         "grade": student.Grade,
         "subjectList": student.SubjectList,

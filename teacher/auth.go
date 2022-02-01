@@ -69,9 +69,9 @@ func postLogin(c *fiber.Ctx) error {
   var body map[string]string
   json.Unmarshal(c.Body(), &body)
 
-  teacher, err := db.GetTeacherByCNP(body["cnp"])
+  teacher, err := db.GetTeacherByID(body["teacherID"])
   if err != nil {
-    utils.MessageError(c, "Nu există niciun profesor cu CNP-ul introdus.")
+    utils.MessageError(c, "Nu există niciun profesor cu ID-ul introdus.")
   }
 
   // if the teacher doesn't have a password
@@ -82,7 +82,7 @@ func postLogin(c *fiber.Ctx) error {
     }
 
     var modifiedTeacher models.Teacher
-    db.Teachers.FindOneAndUpdate(context.Background(), bson.M{"cnp": body["cnp"]}, bson.D{
+    db.Teachers.FindOneAndUpdate(context.Background(), bson.M{"teacherID": body["teacherID"]}, bson.D{
       {Key: "$set", Value: bson.D{{Key: "password",Value: string(hashedPassword)}}},
     }).Decode(&modifiedTeacher)
     
@@ -96,7 +96,6 @@ func postLogin(c *fiber.Ctx) error {
       "teacherID": modifiedTeacher.TeacherID,
       "firstName": modifiedTeacher.FirstName,
       "lastName": modifiedTeacher.LastName,
-      "cnp": modifiedTeacher.CNP,
       "password": modifiedTeacher.Password,
       "homeroomGrade": modifiedTeacher.HomeroomGrade,
       "subjectList": modifiedTeacher.SubjectList,   
@@ -117,7 +116,6 @@ func postLogin(c *fiber.Ctx) error {
         "teacherID": teacher.TeacherID,
         "firstName": teacher.FirstName,
         "lastName": teacher.LastName,
-        "cnp": teacher.CNP,
         "password": teacher.Password,
         "homeroomGrade": teacher.HomeroomGrade,
         "subjectList": teacher.SubjectList,

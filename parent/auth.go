@@ -71,11 +71,11 @@ func parentRegister(c *fiber.Ctx) error {
     db.Parents.FindOne(context.Background(), bson.M{"parentID": parentID}).Decode(&parentGenID)
   } 
 
-  // check if there is a parent account with cnp
+  // check if there is a parent account with email
   var checkParent models.Parent
-  db.Parents.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&checkParent)
+  db.Parents.FindOne(context.Background(), bson.M{"email": body["email"]}).Decode(&checkParent)
   if (checkParent.ParentID != "") {
-    return utils.MessageError(c, "Există deja un părinte cu CNP-ul introdus.")
+    return utils.MessageError(c, "Există deja un părinte cu email-ul introdus.")
   }
 
   // hashed password
@@ -86,7 +86,7 @@ func parentRegister(c *fiber.Ctx) error {
 
   parent := models.Parent {
     ParentID: parentID,
-    CNP: body["cnp"],
+    Email: body["email"],
     FirstName: body["firstName"],
     LastName: body["lastName"],
     Password: string(hashedPassword),
@@ -107,7 +107,7 @@ func parentRegister(c *fiber.Ctx) error {
   return c.JSON(bson.M{
     "_id": insertedResult.InsertedID,
     "parentID": parent.ParentID,
-    "cnp": parent.CNP,
+    "email": parent.Email,
     "firstName": parent.FirstName,
     "lastName": parent.LastName,
     "students": []string {},
@@ -125,8 +125,8 @@ func parentLogin(c *fiber.Ctx) error {
 
   // getting the parent
   var parent models.Parent
-  if err := db.Parents.FindOne(context.Background(), bson.M{"cnp": body["cnp"]}).Decode(&parent); err != nil {
-    return utils.MessageError(c, "Nu există niciun părinte cu CNP-ul introdus.")  
+  if err := db.Parents.FindOne(context.Background(), bson.M{"email": body["email"]}).Decode(&parent); err != nil {
+    return utils.MessageError(c, "Nu există niciun părinte cu email-ul introdus.")  
   }
   hashedPassword := parent.Password
 
@@ -154,7 +154,7 @@ func parentLogin(c *fiber.Ctx) error {
       "parentID": parent.ParentID,
       "firstName": parent.FirstName,
       "lastName": parent.LastName,
-      "cnp": parent.CNP,
+      "email": parent.Email,
       "studentIDList": parent.StudentIDList,
       "students": students,
       "password": parent.Password,

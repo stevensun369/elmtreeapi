@@ -5,6 +5,6 @@ type Parent struct {
 	StudentIDList []string `json:"studentIDList" bson:"studentIDList"`
 	FirstName     string   `json:"firstName,omitempty" bson:"firstName,omitempty"`
 	LastName      string   `json:"lastName,omitempty" bson:"lastName,omitempty"`
-	CNP           string   `json:"cnp,omitempty" bson:"cnp,omitempty"`
+	Email         string   `json:"email,omitempty" bson:"email,omitempty"`
 	Password      string   `json:"password,omitempty" bson:"password,omitempty"`
 }
